@@ -20,7 +20,7 @@
 
   <groupId>smartthings.brave</groupId>
   <artifactId>smartthings-brave-parent</artifactId>
-  <version>0.1.7-SNAPSHOT</version>
+  <version>0.1.9-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>SmartThings Brave (Parent)</name>
@@ -42,9 +42,9 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:git@github.com:smartthingsoss/brave.git</connection>
-    <url>git@github.com:smartthingsoss/brave.git</url>
-    <developerConnection>scm:git:git@github.com:smartthingsoss/brave.git</developerConnection>
+    <url>https://github.com/smartthingsoss/smartthings-brave</url>
+    <connection>scm:git:https://github.com/smartthingsoss/smartthings-brave.git</connection>
+    <developerConnection>scm:git:https://github.com/smartthingsoss/smartthings-brave.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -99,13 +99,30 @@
   <distributionManagement>
     <repository>
       <id>bintray</id>
-      <url>https://api.bintray.com/maven/smartthingsoss/maven/smartthings-brave/;publish=1</url>
+      <url>https://api.bintray.com/maven/smartthingsoss/maven/smartthings.brave/;publish=1</url>
     </repository>
     <snapshotRepository>
       <id>jfrog-snapshots</id>
-      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
     </snapshotRepository>
   </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>bintray</id>
+      <url>https://dl.bintray.com/smartthingsoss/maven/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>jfrog-snapshots</id>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+  </repositories>
 
   <issueManagement>
     <system>Github</system>

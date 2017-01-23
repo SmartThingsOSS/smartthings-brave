@@ -36,17 +36,17 @@ test:
 
 deployment:
   trigger:
-    owner: smartthingsoss
+    owner: SmartThingsOSS
     tag: /release-\d+\.\d+\.\d+/
     commands:
       - ./build-support/trigger-publish.sh
   publish-stable:
-    owner: smartthingsoss
+    owner: SmartThingsOSS
     tag: /\d+\.\d+\.\d+/
     commands:
       - ./build-support/publish-stable.sh
   publish-snapshot:
-    owner: smartthingsoss
+    owner: SmartThingsOSS
     branch: master
     commands:
       - ./build-support/publish-snapshot.sh

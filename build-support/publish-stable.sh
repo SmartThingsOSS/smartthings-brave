@@ -18,4 +18,3 @@ set -x
 
 ./mvnw -DskipTests install -nsu
 ./mvnw --batch-mode -s ./.settings.xml -Prelease -nsu -DskipTests deploy
-./mvnw --batch-mode -s ./.settings.xml -nsu -N io.zipkin.centralsync-maven-plugin:centralsync-maven-plugin:sync
