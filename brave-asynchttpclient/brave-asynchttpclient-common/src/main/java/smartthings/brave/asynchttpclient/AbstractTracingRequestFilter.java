@@ -14,36 +14,41 @@
  */
 package smartthings.brave.asynchttpclient;
 
-
 import com.github.kristofa.brave.ClientRequestInterceptor;
 import com.github.kristofa.brave.ClientResponseInterceptor;
 import com.github.kristofa.brave.ClientSpanThreadBinder;
+import com.github.kristofa.brave.ServerSpanThreadBinder;
 import com.github.kristofa.brave.http.HttpClientRequest;
 import com.github.kristofa.brave.http.HttpClientRequestAdapter;
 import com.github.kristofa.brave.http.SpanNameProvider;
 import com.twitter.zipkin.gen.Endpoint;
 import com.twitter.zipkin.gen.Span;
-
 import java.util.logging.Logger;
 
-public abstract class AbstractTracingRequestFilter<C> {
+abstract class AbstractTracingRequestFilter<C> {
 
   final ClientRequestInterceptor requestInterceptor;
   final ClientResponseInterceptor responseInterceptor;
   final SpanNameProvider nameProvider;
-  final ClientSpanThreadBinder spanThreadBinder;
+  final ClientSpanThreadBinder clientSpanThreadBinder;
+  final ServerSpanThreadBinder serverSpanThreadBinder;
+  final boolean startTraces;
   final Endpoint endpoint;
 
-  public AbstractTracingRequestFilter(ClientRequestInterceptor requestInterceptor,
+  AbstractTracingRequestFilter(ClientRequestInterceptor requestInterceptor,
                               ClientResponseInterceptor responseInterceptor,
                               SpanNameProvider nameProvider,
                               Endpoint endpoint,
-                              ClientSpanThreadBinder spanThreadBinder) {
+                              ClientSpanThreadBinder clientSpanThreadBinder,
+                              ServerSpanThreadBinder serverSpanThreadBinder,
+                              boolean startTraces) {
 
     this.requestInterceptor = requestInterceptor;
     this.responseInterceptor = responseInterceptor;
     this.nameProvider = nameProvider;
-    this.spanThreadBinder = spanThreadBinder;
+    this.clientSpanThreadBinder = clientSpanThreadBinder;
+    this.serverSpanThreadBinder = serverSpanThreadBinder;
+    this.startTraces = startTraces;
     this.endpoint = endpoint;
   }
 
@@ -53,11 +58,18 @@ public abstract class AbstractTracingRequestFilter<C> {
     return System.currentTimeMillis() * 1000L;
   }
 
+  boolean shouldTrace() {
+    // Only join traces, don't start them.
+    return startTraces || (serverSpanThreadBinder != null &&
+      serverSpanThreadBinder.getCurrentServerSpan() != null &&
+      serverSpanThreadBinder.getCurrentServerSpan().getSpan() != null);
+  }
+
   Span startSpan(HttpClientRequest request) {
     HttpClientRequestAdapter adapter = new HttpClientRequestAdapter(request, nameProvider);
     requestInterceptor.handle(adapter);
-    Span span = spanThreadBinder.getCurrentClientSpan();
-    spanThreadBinder.setCurrentSpan(null);
+    Span span = clientSpanThreadBinder.getCurrentClientSpan();
+    clientSpanThreadBinder.setCurrentSpan(null);
     return span;
   }
 
