@@ -17,24 +17,28 @@ package smartthings.brave.asynchttpclient;
 import com.github.kristofa.brave.ClientRequestInterceptor;
 import com.github.kristofa.brave.ClientResponseInterceptor;
 import com.github.kristofa.brave.ClientSpanThreadBinder;
+import com.github.kristofa.brave.ServerSpanThreadBinder;
 import com.github.kristofa.brave.http.HttpClientRequest;
 import com.github.kristofa.brave.http.HttpResponse;
 import com.github.kristofa.brave.http.SpanNameProvider;
-import com.ning.http.client.*;
+import com.ning.http.client.AsyncHandler;
+import com.ning.http.client.HttpResponseBodyPart;
+import com.ning.http.client.HttpResponseHeaders;
+import com.ning.http.client.HttpResponseStatus;
+import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.filter.FilterContext;
 import com.ning.http.client.filter.FilterException;
 import com.ning.http.client.filter.RequestFilter;
 import com.twitter.zipkin.gen.Annotation;
 import com.twitter.zipkin.gen.Endpoint;
 import com.twitter.zipkin.gen.Span;
-import zipkin.Constants;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import zipkin.Constants;
 
 
 public class TracingRequestFilter extends AbstractTracingRequestFilter implements RequestFilter {
@@ -45,9 +49,23 @@ public class TracingRequestFilter extends AbstractTracingRequestFilter implement
                               ClientResponseInterceptor responseInterceptor,
                               SpanNameProvider nameProvider,
                               Endpoint endpoint,
-                              ClientSpanThreadBinder spanThreadBinder) {
+                              ClientSpanThreadBinder clientSpanThreadBinder,
+                              ServerSpanThreadBinder serverSpanThreadBinder) {
 
-    super(requestInterceptor, responseInterceptor, nameProvider, endpoint, spanThreadBinder);
+    this(requestInterceptor, responseInterceptor, nameProvider,
+      endpoint, clientSpanThreadBinder, serverSpanThreadBinder, true);
+  }
+
+  public TracingRequestFilter(ClientRequestInterceptor requestInterceptor,
+    ClientResponseInterceptor responseInterceptor,
+    SpanNameProvider nameProvider,
+    Endpoint endpoint,
+    ClientSpanThreadBinder clientSpanThreadBinder,
+    ServerSpanThreadBinder serverSpanThreadBinder,
+    boolean startNewTraces) {
+
+    super(requestInterceptor, responseInterceptor, nameProvider, endpoint,
+      clientSpanThreadBinder, serverSpanThreadBinder, startNewTraces);
   }
 
   @Override
@@ -56,14 +74,19 @@ public class TracingRequestFilter extends AbstractTracingRequestFilter implement
 
   @Override
   public <T> FilterContext<T> filter(FilterContext<T> context) throws FilterException {
-    TracingHttpClientRequest<T> request = new TracingHttpClientRequest<>(context);
-    Span span = startSpan(request);
-    return request.decorateContext(
-      new AsyncTracingHandler<>(responseInterceptor, spanThreadBinder, span, endpoint, context.getAsyncHandler())
-    );
+    if (shouldTrace()) {
+      TracingHttpClientRequest<T> request = new TracingHttpClientRequest<>(context);
+      Span span = startSpan(request);
+      return request.decorateContext(
+        new AsyncTracingHandler<>(responseInterceptor, clientSpanThreadBinder, span, endpoint,
+          context.getAsyncHandler())
+      );
+    } else {
+      return context;
+    }
   }
 
-  private class AsyncTracingHandler<T> extends AbstractAsyncTracingHandler implements AsyncHandler<T> {
+  private static class AsyncTracingHandler<T> extends AbstractAsyncTracingHandler implements AsyncHandler<T> {
 
     private final AsyncHandler<T> handler;
     private HttpResponseStatus status;
@@ -115,7 +138,7 @@ public class TracingRequestFilter extends AbstractTracingRequestFilter implement
     }
   }
 
-  private class TracingHttpClientResponse implements HttpResponse {
+  private static class TracingHttpClientResponse implements HttpResponse {
 
     private final HttpResponseStatus status;
 
@@ -129,7 +152,7 @@ public class TracingRequestFilter extends AbstractTracingRequestFilter implement
     }
   }
 
-  private class TracingHttpClientRequest<T> implements HttpClientRequest {
+  private static class TracingHttpClientRequest<T> implements HttpClientRequest {
 
     private final FilterContext<T> context;
     private final Map<String, String> headers;
