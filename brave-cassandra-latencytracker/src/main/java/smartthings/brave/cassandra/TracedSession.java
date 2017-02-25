@@ -233,7 +233,7 @@ public class TracedSession extends AbstractInvocationHandler implements LatencyT
   private void addErrorAnnotation(Optional<Span> spanOpt, Throwable t) {
     if (spanOpt.isPresent()) {
       Span s = spanOpt.get();
-      Endpoint local = s.getAnnotations().get(0).host;
+      Endpoint local = (s.getAnnotations().size() > 0) ? s.getAnnotations().get(0).host : null;
       String message = t.getMessage();
       message = message == null ? "unknown" : message;
 
