@@ -89,13 +89,13 @@ public class TracedSession extends AbstractInvocationHandler implements LatencyT
       if (spanOpt.isPresent()) {
 
         Span s = spanOpt.get();
-        Endpoint local = s.getAnnotations().get(0).host;
+        Endpoint local = (s.getAnnotations().size() > 0) ? s.getAnnotations().get(0).host : null;
         long timestamp = s.getTimestamp() + nanos / 1000;
 
         if (e != null) {
           s.addToAnnotations(Annotation.create(timestamp, Constants.ERROR, local));
         } else {
-          s.addToAnnotations(Annotation.create(timestamp, "cql.latency_update", local));
+          s.addToAnnotations(Annotation.create(timestamp, "Latency Update", local));
         }
       }
       return spanOpt;
