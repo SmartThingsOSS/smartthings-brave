@@ -20,7 +20,7 @@
     <parent>
         <groupId>smartthings.brave</groupId>
         <artifactId>smartthings-brave-asynchttpclient-parent</artifactId>
-        <version>0.1.13</version>
+        <version>0.1.14-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>smartthings-brave-asynchttpclient-common</artifactId>
-            <version>0.1.13</version>
+            <version>0.1.14-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.asynchttpclient</groupId>
