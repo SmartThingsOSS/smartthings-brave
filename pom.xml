@@ -70,7 +70,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <main.basedir>${project.basedir}</main.basedir>
     <zipkin.version>1.19.2</zipkin.version>
-    <brave.version>4.0.3</brave.version>
+    <brave.version>4.0.6</brave.version>
     <log4j.version>2.3</log4j.version>
     <httpcomponents.version>4.4.1</httpcomponents.version>
     <maven-release-plugin.version>2.5.2</maven-release-plugin.version>

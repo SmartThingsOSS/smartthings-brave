@@ -189,28 +189,47 @@ public class TracedSession extends AbstractInvocationHandler implements LatencyT
     return f.get();
   }
 
+  /**
+   * Runs the provided function with the appropriate Span.
+   * This handles span thread binder state around the execution of the given function.
+   *
+   * @param statement Statement used to lookup the correct span state.
+   * @param finish Indicates of the span should be completed.
+   * @param f Function to execute with the span.
+   * @return
+   */
   private <R> R runWithSpan(Statement statement, boolean finish, Function<Optional<Span>, R> f) {
-
     Span span = cache.get(statement);
     if (span != null) {
-      Span previous = brave.clientSpanThreadBinder().getCurrentClientSpan();
-      brave.clientSpanThreadBinder().setCurrentSpan(span);
-      try {
-        return f.apply(Optional.of(span));
-      } finally {
 
-        if (finish) {
-          cache.remove(statement);
-          brave.clientTracer().setClientReceived();
+      // guard against cases where a latency call is made while a span is
+      // in the process of being completed by an execution call.
+      synchronized (span) {
+
+        span = cache.get(statement);
+        if (span != null) {
+
+          Span previous = brave.clientSpanThreadBinder().getCurrentClientSpan();
+          brave.clientSpanThreadBinder().setCurrentSpan(span);
+          try {
+            return f.apply(Optional.of(span));
+          } finally {
+
+            if (finish) {
+              cache.remove(statement);
+              brave.clientTracer().setClientReceived();
+            }
+
+            brave.clientSpanThreadBinder().setCurrentSpan(previous);
+          }
+        } else {
+          return f.apply(Optional.absent());
         }
-
-        brave.clientSpanThreadBinder().setCurrentSpan(previous);
       }
+
     } else {
       return f.apply(Optional.absent());
     }
-
-
   }
 
   private <R> R runWithSpan(Statement statement, Function<Optional<Span>, R> f) {
