@@ -94,6 +94,7 @@
     <module>brave-metrics-dropwizard</module>
     <module>brave-mysql</module>
     <module>brave-asynchttpclient</module>
+    <module>brave-common</module>
   </modules>
 
   <distributionManagement>
