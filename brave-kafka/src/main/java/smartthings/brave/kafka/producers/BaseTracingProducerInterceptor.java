@@ -19,22 +19,30 @@ import brave.Tracer;
 import brave.propagation.TraceContext;
 import com.github.kristofa.brave.ClientTracer;
 import com.github.kristofa.brave.SpanIdUtils;
-import com.google.protobuf.ByteString;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.config.ConfigException;
-import smartthings.brave.kafka.EnvelopeProtos;
 import zipkin.Constants;
 import zipkin.Endpoint;
 
 import java.util.Map;
 
 /**
- * Uses {@link Tracer} to create one-way {@link brave.Span#flush()} span (With "cs" and "sr" only)
- * @param <K>
+ * An abstract interceptor that annotates and flush "ws" for each producer record,
+ * and injects the tracing context by mutating {@link ProducerRecord} before it is sent.
+ * Injection is left abstract to allow implementations for different strategies.
+ *
+ * Required: A {@link Tracer} in config as "brave.tracer".
+ * Optional: A {@link SpanNameProvider} in config as "brave.span.name.provider" to customize span name.
+ * Optional: A {@link ClientTracer} in config as "brave.client.tracer" to create child span instead of new.
+ * Optional: A {@link Endpoint} in config as "brave.span.remote.endpoint" to customize span remote endpoint.
+ * @param <K> key type
  */
-public class TracingProducerInterceptor<K> implements ProducerInterceptor<K, byte[]> {
+public abstract class BaseTracingProducerInterceptor<K> implements ProducerInterceptor<K, byte[]> {
+
+  protected abstract ProducerRecord<K, byte[]> getTracedProducerRecord(TraceContext traceContext,
+                                                                       ProducerRecord<K, byte[]> originalRecord);
 
   private Tracer tracer;
   private ClientTracer clientTracer;
@@ -45,29 +53,14 @@ public class TracingProducerInterceptor<K> implements ProducerInterceptor<K, byt
   public ProducerRecord<K, byte[]> onSend(ProducerRecord<K, byte[]> record) {
     Span span = SpanIdUtils.getNextSpan(clientTracer, tracer)
       .name(nameProvider.spanName(record))
-      .annotate(Constants.WIRE_SEND)
+      .annotate(Constants.CLIENT_SEND)
       .remoteEndpoint(kafkaEndpoint);
     if (record.partition() != null) {
       span.tag("Partition", record.partition().toString());
     }
     TraceContext ctx = span.context();
-
-    // Set trace context of the envelope
-    EnvelopeProtos.Envelope.Builder builder = EnvelopeProtos.Envelope.newBuilder()
-      .setTraceIdHigh(ctx.traceIdHigh())
-      .setTraceId(ctx.traceId())
-      .setSpanId(ctx.spanId())
-      .setShared(ctx.shared())
-      .setPayload(ByteString.copyFrom(record.value()));
-    if (ctx.parentId() != null) {
-      builder.setParentId(ctx.parentId());
-    }
-    if (ctx.sampled() != null) {
-      builder.setSampled(ctx.sampled());
-    }
-    EnvelopeProtos.Envelope envelope = builder.build();
     span.flush();
-    return new ProducerRecord<>(record.topic(), record.partition(), record.timestamp(), record.key(), envelope.toByteArray());
+    return getTracedProducerRecord(ctx, record);
   }
 
   @Override

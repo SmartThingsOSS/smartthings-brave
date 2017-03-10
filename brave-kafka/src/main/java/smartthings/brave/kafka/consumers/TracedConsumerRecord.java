@@ -14,22 +14,25 @@
  */
 package smartthings.brave.kafka.consumers;
 
-import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
-import smartthings.brave.kafka.EnvelopeProtos;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-public class EnvelopeTraceContextExtractor implements TraceContext.Extractor<EnvelopeProtos.Envelope> {
-  @Override
-  public TraceContextOrSamplingFlags extract(EnvelopeProtos.Envelope envelope) {
-    TraceContext.Builder builder = TraceContext.newBuilder()
-      .traceIdHigh(envelope.getTraceIdHigh())
-      .traceId(envelope.getTraceId())
-      .spanId(envelope.getSpanId())
-      .sampled(envelope.getSampled())
-      .shared(envelope.getShared());
-    if (envelope.getParentId() != 0) {
-      builder.parentId(envelope.getParentId());
-    }
-    return TraceContextOrSamplingFlags.create(builder);
+public class TracedConsumerRecord<K, V> extends ConsumerRecord<K, V>{
+
+  public final TraceContextOrSamplingFlags traceContextOrSamplingFlags;
+
+  public TracedConsumerRecord(ConsumerRecord<K, V> record, TraceContextOrSamplingFlags traceContextOrSamplingFlags) {
+    super(record.topic(),
+      record.partition(),
+      record.offset(),
+      record.timestamp(),
+      record.timestampType(),
+      record.checksum(),
+      record.serializedKeySize(),
+      record.serializedValueSize(),
+      record.key(),
+      record.value()
+    );
+    this.traceContextOrSamplingFlags = traceContextOrSamplingFlags;
   }
 }

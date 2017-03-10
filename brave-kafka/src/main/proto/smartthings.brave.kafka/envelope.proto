@@ -6,9 +6,9 @@ import "google/protobuf/wrappers.proto";
 message Envelope {
     int64 trace_id_high = 1;
     int64 trace_id = 2;
-    int64 parent_id = 3;
+    google.protobuf.Int64Value parent_id = 3;
     int64 span_id = 4;
-    bool sampled = 5;
+    google.protobuf.BoolValue sampled = 5;
     bool shared = 6;
     bytes payload = 7;
 }
