@@ -95,6 +95,7 @@
     <module>brave-mysql</module>
     <module>brave-asynchttpclient</module>
     <module>brave-common</module>
+    <module>brave-kafka</module>
   </modules>
 
   <distributionManagement>
@@ -132,6 +133,11 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>io.zipkin.brave</groupId>
+        <artifactId>brave</artifactId>
+        <version>${brave.version}</version>
+      </dependency>
       <dependency>
         <groupId>io.zipkin.brave</groupId>
         <artifactId>brave-core</artifactId>
@@ -322,7 +328,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.14</version>
+        <version>1.15</version>
         <configuration>
           <signature>
             <groupId>org.codehaus.mojo.signature</groupId>
@@ -461,7 +467,6 @@
         <artifactId>maven-scm-plugin</artifactId>
         <version>${maven-scm-plugin.version}</version>
       </plugin>
-
     </plugins>
   </build>
   <profiles>
