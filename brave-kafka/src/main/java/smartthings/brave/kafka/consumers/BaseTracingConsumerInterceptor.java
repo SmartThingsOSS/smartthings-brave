@@ -50,7 +50,7 @@ import java.util.logging.Logger;
 public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInterceptor<K, byte[]> {
   private Tracer tracer;
   private SpanNameProvider<K> nameProvider;
-  private Endpoint kafkaEndpoint;
+  private Endpoint remoteEndpoint;
   private final static Logger logger = Logger.getLogger(BaseTracingConsumerInterceptor.class.getName());
 
   /**
@@ -73,12 +73,8 @@ public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInter
         TracedConsumerRecord<K, byte[]> tracedConsumerRecord = getTracedConsumerRecord(record);
         TraceContextOrSamplingFlags traceContextOrSamplingFlags = tracedConsumerRecord.traceContextOrSamplingFlags;
         TraceContext ctx = traceContextOrSamplingFlags.context();
-        (ctx != null ? tracer.joinSpan(ctx) : tracer.newTrace(traceContextOrSamplingFlags.samplingFlags()))
-          .name(nameProvider.spanName(record))
-          .remoteEndpoint(kafkaEndpoint)
-          .tag("kafka.partition", String.valueOf(record.partition()))
-          .annotate(Constants.SERVER_RECV)
-          .flush();
+        // report "sr" if a sampled context is extracted
+        reportServerReceivedSpan(ctx, record);
         tracedRecords.addRecord(tracedConsumerRecord);
       } catch (ExtractException e) {
         // TODO this is questionable, maybe let consumer handle?
@@ -87,6 +83,19 @@ public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInter
       }
     }
     return new ConsumerRecords<>(tracedRecords.getRecords());
+  }
+
+  protected void reportServerReceivedSpan(TraceContext traceContext, ConsumerRecord<K, byte[]> record) {
+    // Only report "sr" if the span was sampled on client side;
+    // reporting only "sr" will result in NaN duration in the zipkin UI
+    if (traceContext != null && traceContext.sampled() == Boolean.TRUE) {
+      tracer.joinSpan(traceContext)
+        .name(nameProvider.spanName(record))
+        .remoteEndpoint(remoteEndpoint)
+        .annotate(Constants.SERVER_RECV)
+        .tag("kafka.partition", String.valueOf(record.partition()))
+        .flush();
+    }
   }
 
   @Override
@@ -101,11 +110,11 @@ public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInter
 
   @Override
   public void configure(Map<String, ?> configs) {
-    if (configs.get("brave.tracer") == null
-      || !(configs.get("brave.tracer") instanceof Tracer)) {
-      throw new ConfigException("brave.tracer", configs.get("brave.tracer"), "Must an be instance of brave.Tracer");
-    } else {
+    if (configs.get("brave.tracer") != null
+      && configs.get("brave.tracer") instanceof Tracer) {
       tracer = (Tracer) configs.get("brave.tracer");
+    } else {
+      throw new ConfigException("brave.tracer", configs.get("brave.tracer"), "Must an be instance of brave.Tracer");
     }
 
     if (configs.get("brave.span.name.provider") != null
@@ -117,12 +126,12 @@ public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInter
 
     if (configs.get("brave.span.remote.endpoint") != null
       && configs.get("brave.span.remote.endpoint") instanceof Endpoint) {
-      kafkaEndpoint = (Endpoint) configs.get("brave.span.remote.endpoint");
+      remoteEndpoint = (Endpoint) configs.get("brave.span.remote.endpoint");
     } else {
-      kafkaEndpoint = Endpoint.builder().serviceName("Kafka").build();
+      remoteEndpoint = Endpoint.builder().serviceName("Kafka").build();
     }
-  }
 
+  }
 
   private static class RecordsAccumulator<K> {
     private final Map<TopicPartition, List<ConsumerRecord<K, byte[]>>> records;

@@ -33,16 +33,20 @@ public class DefaultTracingConsumerInterceptor<K> extends BaseTracingConsumerInt
   protected TracedConsumerRecord<K, byte[]> getTracedConsumerRecord(ConsumerRecord<K, byte[]> record) throws ExtractException {
     try {
       EnvelopeProtos.Envelope envelope = EnvelopeProtos.Envelope.parseFrom(record.value());
-      TraceContext.Builder builder = TraceContext.newBuilder()
-        .traceIdHigh(envelope.getTraceIdHigh())
-        .traceId(envelope.getTraceId())
-        .spanId(envelope.getSpanId())
-        .shared(envelope.getShared());
-      if (envelope.hasSampled()) {
-        builder.sampled(envelope.getSampled().getValue());
-      }
-      if (envelope.hasParentId()) {
-        builder.parentId(envelope.getParentId().getValue());
+      TraceContext.Builder builder = TraceContext.newBuilder();
+      if (envelope.hasTraceContext()) {
+        EnvelopeProtos.TraceContext envelopeCtx = envelope.getTraceContext();
+        builder
+          .traceIdHigh(envelopeCtx.getTraceIdHigh())
+          .traceId(envelopeCtx.getTraceId())
+          .spanId(envelopeCtx.getSpanId())
+          .shared(envelopeCtx.getShared());
+        if (envelopeCtx.hasSampled()) {
+          builder.sampled(envelopeCtx.getSampled().getValue());
+        }
+        if (envelopeCtx.hasParentId()) {
+          builder.parentId(envelopeCtx.getParentId().getValue());
+        }
       }
       TraceContextOrSamplingFlags traceContextOrSamplingFlags = TraceContextOrSamplingFlags.create(builder);
       ConsumerRecord<K, byte[]> originalRecord = new ConsumerRecord<>(

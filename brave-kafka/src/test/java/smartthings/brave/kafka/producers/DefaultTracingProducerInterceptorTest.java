@@ -18,7 +18,7 @@ import brave.Tracer;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import com.github.kristofa.brave.SpanId;
-import com.github.kristofa.brave.SpanIdUtils;
+import com.github.kristofa.brave.SpanUtils;
 import com.github.kristofa.brave.TestClientTracer;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
@@ -79,7 +79,7 @@ public class DefaultTracingProducerInterceptorTest {
       .spanId(traceId)
       .shared(false)
       .build();
-    SpanId parentSpan = SpanIdUtils.traceContextToSpanId(parentTraceContext);
+    SpanId parentSpan = SpanUtils.traceContextToSpanId(parentTraceContext);
 
     when(nameProvider.spanName(any())).thenReturn(spanName);
     when(clientTracer.maybeParent()).thenReturn(parentSpan);
@@ -93,11 +93,11 @@ public class DefaultTracingProducerInterceptorTest {
     assertEquals(topic, injectedRecord.topic());
     assertEquals(null, injectedRecord.partition());
 
-    assertEquals(traceId, envelope.getTraceId());
-    assertEquals(traceIdHigh, envelope.getTraceIdHigh());
-    assertEquals(traceId, envelope.getParentId().getValue());
+    assertEquals(traceId, envelope.getTraceContext().getTraceId());
+    assertEquals(traceIdHigh, envelope.getTraceContext().getTraceIdHigh());
+    assertEquals(traceId, envelope.getTraceContext().getParentId().getValue());
     assertEquals(ByteString.copyFrom(value), envelope.getPayload());
-    assertNotEquals(traceId, envelope.getSpanId());
-    assert(envelope.getSpanId() != 0);
+    assertNotEquals(traceId, envelope.getTraceContext().getSpanId());
+    assert(envelope.getTraceContext().getSpanId() != 0);
   }
 }

@@ -14,14 +14,8 @@
  */
 package com.github.kristofa.brave;
 
-/**
- * Just so we can stub com.github.kristofa.brave.TestClientTracer#maybeParent()
- */
-public abstract class TestClientTracer extends ClientTracer  {
-
-  public abstract ClientSpanThreadBinder currentSpan();
+public abstract class TestServerTracer extends ServerTracer {
+  public abstract ServerSpanThreadBinder currentSpan();
 
   public abstract Recorder recorder();
-
-  public abstract SpanId maybeParent();
 }
