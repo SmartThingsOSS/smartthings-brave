@@ -3,12 +3,16 @@ package smartthings.brave.kafka;
 option java_outer_classname = "EnvelopeProtos";
 import "google/protobuf/wrappers.proto";
 
-message Envelope {
+message TraceContext {
     int64 trace_id_high = 1;
     int64 trace_id = 2;
     google.protobuf.Int64Value parent_id = 3;
     int64 span_id = 4;
     google.protobuf.BoolValue sampled = 5;
     bool shared = 6;
-    bytes payload = 7;
+}
+
+message Envelope {
+    TraceContext trace_context = 1;
+    bytes payload = 2;
 }

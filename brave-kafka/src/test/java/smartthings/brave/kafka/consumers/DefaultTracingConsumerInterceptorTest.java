@@ -19,6 +19,7 @@ import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.BoolValue;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Int64Value;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -87,14 +88,20 @@ public class DefaultTracingConsumerInterceptorTest {
       .parentId(parentId)
       .spanId(spanId)
       .shared(false)
+      .sampled(true)
       .build();
 
-    EnvelopeProtos.Envelope envelope = EnvelopeProtos.Envelope.newBuilder()
+    EnvelopeProtos.TraceContext envelopeTraceCtx = EnvelopeProtos.TraceContext.newBuilder()
       .setTraceId(traceId)
       .setTraceIdHigh(traceIdHigh)
       .setParentId(Int64Value.newBuilder().setValue(parentId))
       .setSpanId(spanId)
       .setShared(false)
+      .setSampled(BoolValue.newBuilder().setValue(true))
+      .build();
+
+    EnvelopeProtos.Envelope envelope = EnvelopeProtos.Envelope.newBuilder()
+      .setTraceContext(envelopeTraceCtx)
       .setPayload(ByteString.copyFrom(value))
       .build();
 

@@ -32,20 +32,26 @@ public class DefaultTracingProducerInterceptor<K> extends BaseTracingProducerInt
 
   @Override
   protected ProducerRecord<K, byte[]> getTracedProducerRecord(TraceContext ctx, ProducerRecord<K, byte[]> record) {
-    // Set trace context of the envelope
+    EnvelopeProtos.TraceContext.Builder ctxBuilder = null;
+    if (ctx != null) {
+      ctxBuilder = EnvelopeProtos.TraceContext.newBuilder()
+        .setTraceIdHigh(ctx.traceIdHigh())
+        .setTraceId(ctx.traceId())
+        .setSpanId(ctx.spanId())
+        .setShared(ctx.shared());
+      if (ctx.parentId() != null) {
+        ctxBuilder.setParentId(Int64Value.newBuilder().setValue(ctx.parentId()).build());
+      }
+      if (ctx.sampled() != null) {
+        ctxBuilder.setSampled(BoolValue.newBuilder().setValue(ctx.sampled()).build());
+      }
+    }
+
     EnvelopeProtos.Envelope.Builder builder = EnvelopeProtos.Envelope.newBuilder()
-      .setTraceIdHigh(ctx.traceIdHigh())
-      .setTraceId(ctx.traceId())
-      .setSpanId(ctx.spanId())
-      .setShared(ctx.shared())
       .setPayload(ByteString.copyFrom(record.value()));
-    if (ctx.parentId() != null) {
-      builder.setParentId(Int64Value.newBuilder().setValue(ctx.parentId()).build());
+    if (ctxBuilder != null) {
+      builder.setTraceContext(ctxBuilder);
     }
-    if (ctx.sampled() != null) {
-      builder.setSampled(BoolValue.newBuilder().setValue(ctx.sampled()).build());
-    }
-    EnvelopeProtos.Envelope envelope = builder.build();
-    return new ProducerRecord<>(record.topic(), record.partition(), record.timestamp(), record.key(), envelope.toByteArray());
+    return new ProducerRecord<>(record.topic(), record.partition(), record.timestamp(), record.key(), builder.build().toByteArray());
   }
 }

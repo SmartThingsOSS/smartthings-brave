@@ -18,7 +18,7 @@ import brave.Span;
 import brave.Tracer;
 import brave.propagation.TraceContext;
 import com.github.kristofa.brave.ClientTracer;
-import com.github.kristofa.brave.SpanIdUtils;
+import com.github.kristofa.brave.SpanUtils;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -34,8 +34,8 @@ import java.util.Map;
  * Injection is left abstract to allow implementations for different strategies.
  *
  * Required: A {@link Tracer} in config as "brave.tracer".
+ * Required: A {@link ClientTracer} in config as "brave.client.tracer" to create child span instead of new.
  * Optional: A {@link SpanNameProvider} in config as "brave.span.name.provider" to customize span name.
- * Optional: A {@link ClientTracer} in config as "brave.client.tracer" to create child span instead of new.
  * Optional: A {@link Endpoint} in config as "brave.span.remote.endpoint" to customize span remote endpoint.
  * @param <K> key type
  */
@@ -43,24 +43,35 @@ public abstract class BaseTracingProducerInterceptor<K> implements ProducerInter
 
   protected abstract ProducerRecord<K, byte[]> getTracedProducerRecord(TraceContext traceContext,
                                                                        ProducerRecord<K, byte[]> originalRecord);
-
   private Tracer tracer;
   private ClientTracer clientTracer;
   private SpanNameProvider<K> nameProvider;
-  private Endpoint kafkaEndpoint;
+  private Endpoint remoteEndpoint;
 
   @Override
   public ProducerRecord<K, byte[]> onSend(ProducerRecord<K, byte[]> record) {
-    Span span = SpanIdUtils.getNextSpan(clientTracer, tracer)
-      .name(nameProvider.spanName(record))
-      .annotate(Constants.CLIENT_SEND)
-      .remoteEndpoint(kafkaEndpoint);
-    if (record.partition() != null) {
-      span.tag("Partition", record.partition().toString());
-    }
-    TraceContext ctx = span.context();
-    span.flush();
+    // create span, report "cs" and get trace context for injection
+    TraceContext ctx = reportClientSentSpan(record);
     return getTracedProducerRecord(ctx, record);
+  }
+
+  protected TraceContext reportClientSentSpan(ProducerRecord<K, byte[]> record) {
+    Span span;
+    TraceContext parentContext = SpanUtils.maybeParentTraceContext(clientTracer);
+    if (parentContext != null) {
+      span =  tracer.newChild(parentContext);
+    } else {
+      span = tracer.newTrace();
+    }
+    TraceContext traceContext = span.context();
+    span.name(nameProvider.spanName(record))
+      .annotate(Constants.CLIENT_SEND)
+      .remoteEndpoint(remoteEndpoint);
+    if (record.partition() != null) {
+      span.tag("kafka.partition", record.partition().toString());
+    }
+    span.flush();
+    return traceContext;
   }
 
   @Override
@@ -75,11 +86,18 @@ public abstract class BaseTracingProducerInterceptor<K> implements ProducerInter
 
   @Override
   public void configure(Map<String, ?> configs) {
-    if (configs.get("brave.tracer") == null
-      || !(configs.get("brave.tracer") instanceof Tracer)) {
-      throw new ConfigException("brave.tracer", configs.get("brave.tracer"), "Must an be instance of brave.Tracer");
-    } else {
+    if (configs.get("brave.tracer") != null
+      && configs.get("brave.tracer") instanceof Tracer) {
       tracer = (Tracer) configs.get("brave.tracer");
+    } else {
+      throw new ConfigException("brave.tracer", configs.get("brave.tracer"), "Must an be instance of brave.Tracer");
+    }
+
+    if (configs.get("brave.client.tracer") != null
+      && configs.get("brave.client.tracer") instanceof ClientTracer) {
+      clientTracer = (ClientTracer) configs.get("brave.client.tracer");
+    } else {
+      throw new ConfigException("brave.client.tracer", configs.get("brave.client.tracer"), "Must an be instance of com.github.kristofa.brave.ClientTracer");
     }
 
     if (configs.get("brave.span.name.provider") != null
@@ -89,16 +107,11 @@ public abstract class BaseTracingProducerInterceptor<K> implements ProducerInter
       nameProvider = new DefaultSpanNameProvider<>();
     }
 
-    if (configs.get("brave.client.tracer") != null
-      && configs.get("brave.client.tracer") instanceof ClientTracer) {
-      clientTracer = (ClientTracer) configs.get("brave.client.tracer");
-    }
-
     if (configs.get("brave.span.remote.endpoint") != null
       && configs.get("brave.span.remote.endpoint") instanceof Endpoint) {
-      kafkaEndpoint = (Endpoint) configs.get("brave.span.remote.endpoint");
+      remoteEndpoint = (Endpoint) configs.get("brave.span.remote.endpoint");
     } else {
-      kafkaEndpoint = Endpoint.builder().serviceName("Kafka").build();
+      remoteEndpoint = Endpoint.builder().serviceName("Kafka").build();
     }
   }
 }
