@@ -19,16 +19,16 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>smartthings.brave</groupId>
-    <artifactId>smartthings-brave-asynchttpclient-parent</artifactId>
+    <artifactId>smartthings-brave-parent</artifactId>
     <version>0.2.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>smartthings-brave-asynchttpclient-1.9.x</artifactId>
+  <artifactId>smartthings-brave-http-common</artifactId>
   <packaging>jar</packaging>
 
-  <name>smartthings-brave-asynchttpclient-1.9.x</name>
-  <description>Brave AsyncHttpClient latency tracker</description>
+  <name>smartthings-brave-http-common</name>
+  <description>MySQL Brave statement interceptor</description>
 
   <licenses>
     <license>
@@ -39,28 +39,13 @@
   </licenses>
 
   <properties>
-    <main.basedir>${project.basedir}/../..</main.basedir>
-    <asynchttpclient.version>1.9.28</asynchttpclient.version>
+    <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>com.ning</groupId>
-      <artifactId>async-http-client</artifactId>
-      <version>${asynchttpclient.version}</version>
-    </dependency>
-    <dependency>
       <groupId>io.zipkin.brave</groupId>
       <artifactId>brave-instrumentation-http</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.zipkin.brave</groupId>
-      <artifactId>brave</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.auto.value</groupId>
-      <artifactId>auto-value</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -69,8 +54,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.zipkin.brave</groupId>
-      <artifactId>brave-instrumentation-http-tests</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

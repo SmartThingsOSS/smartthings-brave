@@ -20,7 +20,7 @@
     <parent>
         <groupId>smartthings.brave</groupId>
         <artifactId>smartthings-brave-asynchttpclient-parent</artifactId>
-        <version>0.1.15-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -40,19 +40,22 @@
 
     <properties>
         <main.basedir>${project.basedir}/../..</main.basedir>
-        <asynchttpclient.version>2.0.10</asynchttpclient.version>
+        <asynchttpclient.version>2.0.0</asynchttpclient.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>smartthings-brave-asynchttpclient-common</artifactId>
-            <version>0.1.15-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.asynchttpclient</groupId>
             <artifactId>async-http-client</artifactId>
             <version>${asynchttpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.brave</groupId>
+            <artifactId>brave-instrumentation-http</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.brave</groupId>
+            <artifactId>brave</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.auto.value</groupId>
@@ -70,6 +73,11 @@
             <artifactId>wiremock</artifactId>
             <version>2.5.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>io.zipkin.brave</groupId>
+          <artifactId>brave-instrumentation-http-tests</artifactId>
+          <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

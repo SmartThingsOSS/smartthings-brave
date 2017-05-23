@@ -14,7 +14,9 @@
  */
 package smartthings.brave.kafka.consumers;
 
+import brave.Span;
 import brave.Tracer;
+import brave.Tracing;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
 import com.google.common.collect.ImmutableMap;
@@ -24,7 +26,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
-import zipkin.Constants;
 import zipkin.Endpoint;
 
 import java.util.HashMap;
@@ -48,7 +49,7 @@ import java.util.logging.Logger;
  * @param <K> key type
  */
 public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInterceptor<K, byte[]> {
-  private Tracer tracer;
+  private Tracing tracing;
   private SpanNameProvider<K> nameProvider;
   private Endpoint kafkaEndpoint;
   private final static Logger logger = Logger.getLogger(BaseTracingConsumerInterceptor.class.getName());
@@ -71,13 +72,20 @@ public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInter
       try {
         // Try extracting trace context and original record from received record
         TracedConsumerRecord<K, byte[]> tracedConsumerRecord = getTracedConsumerRecord(record);
-        TraceContextOrSamplingFlags traceContextOrSamplingFlags = tracedConsumerRecord.traceContextOrSamplingFlags;
+        TraceContextOrSamplingFlags traceContextOrSamplingFlags =
+          tracedConsumerRecord.traceContextOrSamplingFlags;
         TraceContext ctx = traceContextOrSamplingFlags.context();
-        (ctx != null ? tracer.joinSpan(ctx) : tracer.newTrace(traceContextOrSamplingFlags.samplingFlags()))
+
+        Span span = (ctx != null)
+          ? tracing.tracer().joinSpan(ctx)
+          : tracing.tracer().newTrace(traceContextOrSamplingFlags.samplingFlags());
+
+        span
+          .kind(Span.Kind.SERVER)
           .name(nameProvider.spanName(record))
           .remoteEndpoint(kafkaEndpoint)
           .tag("kafka.partition", String.valueOf(record.partition()))
-          .annotate(Constants.SERVER_RECV)
+          .start()
           .flush();
         tracedRecords.addRecord(tracedConsumerRecord);
       } catch (ExtractException e) {
@@ -101,11 +109,11 @@ public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInter
 
   @Override
   public void configure(Map<String, ?> configs) {
-    if (configs.get("brave.tracer") == null
-      || !(configs.get("brave.tracer") instanceof Tracer)) {
-      throw new ConfigException("brave.tracer", configs.get("brave.tracer"), "Must an be instance of brave.Tracer");
+    if (configs.get("brave.tracing") == null
+      || !(configs.get("brave.tracing") instanceof Tracing)) {
+      throw new ConfigException("brave.tracing", configs.get("brave.tracing"), "Must an be instance of brave.Tracing");
     } else {
-      tracer = (Tracer) configs.get("brave.tracer");
+      tracing = (Tracing) configs.get("brave.tracing");
     }
 
     if (configs.get("brave.span.name.provider") != null

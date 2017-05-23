@@ -15,6 +15,7 @@
 package smartthings.brave.kafka.consumers;
 
 import brave.Tracer;
+import brave.Tracing;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +45,7 @@ import static org.mockito.Mockito.*;
 public class DefaultTracingConsumerInterceptorTest {
 
   private final Reporter<Span> reporter = mock(Reporter.class);
-  private final Tracer tracer = Tracer.newBuilder()
+  private final Tracing tracing = Tracing.newBuilder()
     .localServiceName("test")
     .sampler(Sampler.ALWAYS_SAMPLE)
     .traceId128Bit(true)
@@ -60,7 +61,7 @@ public class DefaultTracingConsumerInterceptorTest {
   public void setUp() {
     interceptor = new DefaultTracingConsumerInterceptor<>();
     interceptor.configure(ImmutableMap.of(
-      "brave.tracer", tracer,
+      "brave.tracing", tracing,
       "brave.span.name.provider", nameProvider,
       "brave.span.remote.endpoint", endpoint
     ));
