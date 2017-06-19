@@ -20,7 +20,7 @@
     <parent>
         <groupId>smartthings.brave</groupId>
         <artifactId>smartthings-brave-parent</artifactId>
-        <version>0.1.15-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -46,7 +46,7 @@
     <dependencies>
         <dependency>
             <groupId>io.zipkin.brave</groupId>
-            <artifactId>brave-core</artifactId>
+            <artifactId>brave</artifactId>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>

@@ -20,7 +20,7 @@
 
   <groupId>smartthings.brave</groupId>
   <artifactId>smartthings-brave-parent</artifactId>
-  <version>0.1.15-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>SmartThings Brave (Parent)</name>
@@ -69,8 +69,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <main.basedir>${project.basedir}</main.basedir>
-    <zipkin.version>1.19.2</zipkin.version>
-    <brave.version>4.0.6</brave.version>
+    <zipkin.version>1.26.1</zipkin.version>
+    <brave.version>4.3.4</brave.version>
+    <brave-cassandra.version>0.1.0</brave-cassandra.version>
+    <cassandra-driver.version>3.2.0</cassandra-driver.version>
     <log4j.version>2.3</log4j.version>
     <httpcomponents.version>4.4.1</httpcomponents.version>
     <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
@@ -90,12 +92,11 @@
   </properties>
 
   <modules>
-    <module>brave-cassandra-latencytracker</module>
     <module>brave-metrics-dropwizard</module>
-    <module>brave-mysql</module>
     <module>brave-asynchttpclient</module>
-    <module>brave-common</module>
     <module>brave-kafka</module>
+    <module>brave-http-common</module>
+    <!--<module>brave-cassandra-common</module>-->
   </modules>
 
   <distributionManagement>
@@ -140,12 +141,12 @@
       </dependency>
       <dependency>
         <groupId>io.zipkin.brave</groupId>
-        <artifactId>brave-core</artifactId>
+        <artifactId>brave-instrumentation-http</artifactId>
         <version>${brave.version}</version>
       </dependency>
       <dependency>
         <groupId>io.zipkin.brave</groupId>
-        <artifactId>brave-http</artifactId>
+        <artifactId>brave-instrumentation-http-tests</artifactId>
         <version>${brave.version}</version>
       </dependency>
       <dependency>
@@ -157,6 +158,16 @@
         <groupId>io.zipkin.java</groupId>
         <artifactId>zipkin-junit</artifactId>
         <version>${zipkin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.zipkin.brave.cassandra</groupId>
+        <artifactId>brave-instrumentation-cassandra-driver</artifactId>
+        <version>${brave-cassandra.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.datastax.cassandra</groupId>
+        <artifactId>cassandra-driver-core</artifactId>
+        <version>${cassandra-driver.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.thrift</groupId>
@@ -230,7 +241,7 @@
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
-      <version>3.2.0</version>
+      <version>3.6.2</version>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>
@@ -510,4 +521,3 @@
   </profiles>
 
 </project>
-

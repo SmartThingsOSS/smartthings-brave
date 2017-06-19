@@ -21,7 +21,7 @@
     <parent>
         <groupId>smartthings.brave</groupId>
         <artifactId>smartthings-brave-parent</artifactId>
-        <version>0.1.15-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -36,7 +36,6 @@
     </properties>
 
     <modules>
-        <module>brave-asynchttpclient-common</module>
         <module>brave-asynchttpclient-1.9.x</module>
         <module>brave-asynchttpclient-2.x</module>
     </modules>

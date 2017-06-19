@@ -16,9 +16,8 @@ package smartthings.brave.kafka.producers;
 
 import brave.Span;
 import brave.Tracer;
+import brave.Tracing;
 import brave.propagation.TraceContext;
-import com.github.kristofa.brave.ClientTracer;
-import com.github.kristofa.brave.SpanIdUtils;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -35,51 +34,45 @@ import java.util.Map;
  *
  * Required: A {@link Tracer} in config as "brave.tracer".
  * Optional: A {@link SpanNameProvider} in config as "brave.span.name.provider" to customize span name.
- * Optional: A {@link ClientTracer} in config as "brave.client.tracer" to create child span instead of new.
  * Optional: A {@link Endpoint} in config as "brave.span.remote.endpoint" to customize span remote endpoint.
  * @param <K> key type
  */
 public abstract class BaseTracingProducerInterceptor<K> implements ProducerInterceptor<K, byte[]> {
 
-  protected abstract ProducerRecord<K, byte[]> getTracedProducerRecord(TraceContext traceContext,
-                                                                       ProducerRecord<K, byte[]> originalRecord);
+  protected abstract ProducerRecord<K, byte[]> getTracedProducerRecord(
+    TraceContext traceContext, ProducerRecord<K, byte[]> originalRecord);
 
-  private Tracer tracer;
-  private ClientTracer clientTracer;
+  private Tracing tracing;
   private SpanNameProvider<K> nameProvider;
   private Endpoint kafkaEndpoint;
 
   @Override
   public ProducerRecord<K, byte[]> onSend(ProducerRecord<K, byte[]> record) {
-    Span span = SpanIdUtils.getNextSpan(clientTracer, tracer)
+    Span span = tracing.tracer().nextSpan()
+      .kind(Span.Kind.CLIENT)
       .name(nameProvider.spanName(record))
-      .annotate(Constants.CLIENT_SEND)
       .remoteEndpoint(kafkaEndpoint);
     if (record.partition() != null) {
       span.tag("Partition", record.partition().toString());
     }
     TraceContext ctx = span.context();
-    span.flush();
+    span.start().flush();
     return getTracedProducerRecord(ctx, record);
   }
 
   @Override
-  public void onAcknowledgement(RecordMetadata metadata, Exception exception) {
-
-  }
+  public void onAcknowledgement(RecordMetadata metadata, Exception exception) {}
 
   @Override
-  public void close() {
-
-  }
+  public void close() {}
 
   @Override
   public void configure(Map<String, ?> configs) {
-    if (configs.get("brave.tracer") == null
-      || !(configs.get("brave.tracer") instanceof Tracer)) {
-      throw new ConfigException("brave.tracer", configs.get("brave.tracer"), "Must an be instance of brave.Tracer");
+    if (configs.get("brave.tracing") == null
+      || !(configs.get("brave.tracing") instanceof Tracing)) {
+      throw new ConfigException("brave.tracing", configs.get("brave.tracing"), "Must an be instance of brave.Tracing");
     } else {
-      tracer = (Tracer) configs.get("brave.tracer");
+      tracing = (Tracing) configs.get("brave.tracing");
     }
 
     if (configs.get("brave.span.name.provider") != null
@@ -87,11 +80,6 @@ public abstract class BaseTracingProducerInterceptor<K> implements ProducerInter
       nameProvider = (SpanNameProvider<K>) configs.get("brave.span.name.provider");
     } else {
       nameProvider = new DefaultSpanNameProvider<>();
-    }
-
-    if (configs.get("brave.client.tracer") != null
-      && configs.get("brave.client.tracer") instanceof ClientTracer) {
-      clientTracer = (ClientTracer) configs.get("brave.client.tracer");
     }
 
     if (configs.get("brave.span.remote.endpoint") != null
