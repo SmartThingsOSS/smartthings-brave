@@ -73,7 +73,7 @@ public final class SimpleB3ContextCarrier {
     this.flags = flags;
   }
 
-  private boolean isRedirect() {
+  public boolean isRedirect() {
     return flags != null && ((flags & (1<<2)) != 0);
   }
 
@@ -88,7 +88,7 @@ public final class SimpleB3ContextCarrier {
     return this;
   }
 
-  private boolean isDebug() {
+  public boolean isDebug() {
     return flags != null && ((flags & (1<<0)) != 0);
   }
 
@@ -103,7 +103,7 @@ public final class SimpleB3ContextCarrier {
     return this;
   }
 
-  private boolean isSampled() {
+  public boolean isSampled() {
     return flags != null && ((flags & (1<<1)) != 0);
   }
 
