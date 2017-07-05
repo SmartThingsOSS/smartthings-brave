@@ -119,6 +119,40 @@ public final class SimpleB3ContextCarrier {
   }
 
 
+  public static final class Builder {
+
+    private final SimpleB3ContextCarrier carrier;
+
+    private Builder() {
+      carrier = new SimpleB3ContextCarrier();
+    }
+
+    public static Builder newBuilder() {
+      return new Builder();
+    }
+
+    public Builder setRedirect(boolean redirect) {
+      this.carrier.setRedirect(redirect);
+      return this;
+    }
+
+    public Builder setSampled(boolean sampled) {
+      this.carrier.setSampled(sampled);
+      return this;
+    }
+
+    public Builder setDebug(boolean debug) {
+      this.carrier.setDebug(debug);
+      return this;
+    }
+
+    public SimpleB3ContextCarrier build() {
+      return this.carrier;
+    }
+
+  }
+
+
 
   public static final class Encoding {
 
