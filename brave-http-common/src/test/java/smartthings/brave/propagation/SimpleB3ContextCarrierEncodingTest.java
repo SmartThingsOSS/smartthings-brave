@@ -71,4 +71,24 @@ public class SimpleB3ContextCarrierEncodingTest {
     assertThat(getter.get(carrier, SimpleB3ContextCarrier.FLAGS_NAME)).isEqualTo("0000000000000002");
   }
 
+  @Test
+  public void builderShouldSetFlags() {
+    SimpleB3ContextCarrier carrier = SimpleB3ContextCarrier.Builder.newBuilder()
+      .setDebug(true)
+      .setSampled(true)
+      .setRedirect(true)
+      .build();
+
+    SimpleB3ContextCarrier.Setter setter = new SimpleB3ContextCarrier.Setter();
+    setter.put(carrier, SimpleB3ContextCarrier.TRACE_ID_NAME, HexCodec.toLowerHex(1234));
+    setter.put(carrier, SimpleB3ContextCarrier.SPAN_ID_NAME, HexCodec.toLowerHex(9012));
+
+    String encoded = SimpleB3ContextCarrier.Encoding.encode(carrier);
+
+    assertThat(encoded).isEqualTo("n00000000000004d20000000000002334n0000000000000007");
+    assertThat(carrier.isDebug()).isTrue();
+    assertThat(carrier.isSampled()).isTrue();
+    assertThat(carrier.isRedirect()).isTrue();
+  }
+
 }
