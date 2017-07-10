@@ -20,7 +20,7 @@
 
   <groupId>smartthings.brave</groupId>
   <artifactId>smartthings-brave-parent</artifactId>
-  <version>0.2.5-SNAPSHOT</version>
+  <version>0.2.5</version>
   <packaging>pom</packaging>
 
   <name>SmartThings Brave (Parent)</name>
@@ -45,7 +45,7 @@
     <url>https://github.com/smartthingsoss/smartthings-brave</url>
     <connection>scm:git:https://github.com/smartthingsoss/smartthings-brave.git</connection>
     <developerConnection>scm:git:https://github.com/smartthingsoss/smartthings-brave.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v0.2.5</tag>
   </scm>
 
   <developers>
