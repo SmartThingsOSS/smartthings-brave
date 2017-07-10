@@ -254,7 +254,11 @@ public final class SimpleB3ContextCarrier {
       } else if (SAMPLED_NAME.equals(key) && value != null && !value.equals("")) {
         carrier.setSampled(value.equals("1") || value.equals("true"));
       } else if (FLAGS_NAME.equals(key) && value != null && !value.equals("")) {
-        carrier.flags = HexCodec.lowerHexToUnsignedLong(value);
+        if (carrier.flags != null) {
+          carrier.flags = carrier.flags | HexCodec.lowerHexToUnsignedLong(value);
+        } else {
+          carrier.flags = HexCodec.lowerHexToUnsignedLong(value);
+        }
       }
     }
 

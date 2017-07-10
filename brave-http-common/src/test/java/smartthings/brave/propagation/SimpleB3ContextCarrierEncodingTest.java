@@ -15,6 +15,8 @@ package smartthings.brave.propagation;
 
 import brave.internal.HexCodec;
 import org.junit.Test;
+import smartthings.brave.http.SanitizingHttpServerParser;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SimpleB3ContextCarrierEncodingTest {
@@ -43,6 +45,10 @@ public class SimpleB3ContextCarrierEncodingTest {
     String encoded = SimpleB3ContextCarrier.Encoding.encode(carrier);
 
     assertThat(encoded).isEqualTo("n00000000000004d20000000000002334000000000000162e0000000000000002");
+
+    assertThat(carrier.isDebug()).isFalse();
+    assertThat(carrier.isSampled()).isTrue();
+    assertThat(carrier.isRedirect()).isFalse();
   }
 
   @Test
@@ -55,6 +61,10 @@ public class SimpleB3ContextCarrierEncodingTest {
     assertThat(getter.get(carrier, SimpleB3ContextCarrier.TRACE_ID_NAME)).isEqualTo("00000000000004d2");
     assertThat(getter.get(carrier, SimpleB3ContextCarrier.SPAN_ID_NAME)).isEqualTo("0000000000002334");
     assertThat(getter.get(carrier, SimpleB3ContextCarrier.SAMPLED_NAME)).isEqualTo("0");
+
+    assertThat(carrier.isDebug()).isFalse();
+    assertThat(carrier.isSampled()).isFalse();
+    assertThat(carrier.isRedirect()).isFalse();
   }
 
   @Test
@@ -69,6 +79,10 @@ public class SimpleB3ContextCarrierEncodingTest {
     assertThat(getter.get(carrier, SimpleB3ContextCarrier.SPAN_ID_NAME)).isEqualTo("0000000000002334");
     assertThat(getter.get(carrier, SimpleB3ContextCarrier.SAMPLED_NAME)).isEqualTo("1");
     assertThat(getter.get(carrier, SimpleB3ContextCarrier.FLAGS_NAME)).isEqualTo("0000000000000002");
+
+    assertThat(carrier.isDebug()).isFalse();
+    assertThat(carrier.isSampled()).isTrue();
+    assertThat(carrier.isRedirect()).isFalse();
   }
 
   @Test
@@ -89,6 +103,48 @@ public class SimpleB3ContextCarrierEncodingTest {
     assertThat(carrier.isDebug()).isTrue();
     assertThat(carrier.isSampled()).isTrue();
     assertThat(carrier.isRedirect()).isTrue();
+  }
+
+  @Test
+  public void injectingFlagsShouldNotUnsetBuilderValues() {
+    SimpleB3ContextCarrier carrier = SimpleB3ContextCarrier.Builder.newBuilder()
+      .setDebug(false)
+      .setSampled(true)
+      .setRedirect(true)
+      .build();
+
+    SimpleB3ContextCarrier.Setter setter = new SimpleB3ContextCarrier.Setter();
+    setter.put(carrier, SimpleB3ContextCarrier.TRACE_ID_NAME, HexCodec.toLowerHex(1234));
+    setter.put(carrier, SimpleB3ContextCarrier.SPAN_ID_NAME, HexCodec.toLowerHex(9012));
+    setter.put(carrier, SimpleB3ContextCarrier.FLAGS_NAME, "0000000000000000");
+
+    String encoded = SimpleB3ContextCarrier.Encoding.encode(carrier);
+
+    assertThat(encoded).isEqualTo("n00000000000004d20000000000002334n0000000000000006");
+    assertThat(carrier.isDebug()).isFalse();
+    assertThat(carrier.isSampled()).isTrue();
+    assertThat(carrier.isRedirect()).isTrue();
+  }
+
+  @Test
+  public void injectingZeroFlagsShouldNotSetValues() {
+    SimpleB3ContextCarrier carrier = SimpleB3ContextCarrier.Builder.newBuilder()
+      .setDebug(false)
+      .setSampled(false)
+      .setRedirect(false)
+      .build();
+
+    SimpleB3ContextCarrier.Setter setter = new SimpleB3ContextCarrier.Setter();
+    setter.put(carrier, SimpleB3ContextCarrier.TRACE_ID_NAME, HexCodec.toLowerHex(1234));
+    setter.put(carrier, SimpleB3ContextCarrier.SPAN_ID_NAME, HexCodec.toLowerHex(9012));
+    setter.put(carrier, SimpleB3ContextCarrier.FLAGS_NAME, "0000000000000000");
+
+    String encoded = SimpleB3ContextCarrier.Encoding.encode(carrier);
+
+    assertThat(encoded).isEqualTo("n00000000000004d20000000000002334n0000000000000000");
+    assertThat(carrier.isDebug()).isFalse();
+    assertThat(carrier.isSampled()).isFalse();
+    assertThat(carrier.isRedirect()).isFalse();
   }
 
 }
