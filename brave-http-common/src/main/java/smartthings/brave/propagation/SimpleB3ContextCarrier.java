@@ -53,24 +53,43 @@ public final class SimpleB3ContextCarrier {
     B3Propagation.B3_STRING.extractor(new Getter());
 
 
-  private String traceIdHigh;
-  private String traceId;
+  private String traceIdHigh = null;
+  private String traceId = "0000000000000000";
   private String parentId = null;
-  private String spanId;
+  private String spanId = "0000000000000000";
   private Long flags = null;
 
-  public SimpleB3ContextCarrier() {}
-
-  SimpleB3ContextCarrier(long traceIdHigh, long traceId, long spanId) {
-    this.traceIdHigh = HexCodec.toLowerHex(traceIdHigh);
-    this.traceId = HexCodec.toLowerHex(traceId);
-    this.spanId = HexCodec.toLowerHex(spanId);
+  public static Builder newBuilder() {
+    return new Builder();
   }
 
-  SimpleB3ContextCarrier(long traceIdHigh, long traceId, long spanId, long parentId, long flags) {
-    this(traceIdHigh, traceId, spanId);
-    this.parentId = HexCodec.toLowerHex(parentId);
-    this.flags = flags;
+  public static Builder newBuilderFrom(SimpleB3ContextCarrier carrier) {
+    return new Builder()
+      .setTraceIdHigh(carrier.getTraceIdHigh())
+      .setTraceId(carrier.getTraceId())
+      .setParentId(carrier.getParentId())
+      .setSpanId(carrier.getSpanId())
+      .setDebug(carrier.isDebug())
+      .setSampled(carrier.isSampled())
+      .setRedirect(carrier.isRedirect())
+      .setComplete(carrier.isComplete());
+  }
+
+  private SimpleB3ContextCarrier() {}
+
+  public boolean isComplete() {
+    return flags != null && ((flags & (1<<3)) != 0);
+  }
+
+  private SimpleB3ContextCarrier setComplete(boolean complete) {
+    if (flags == null) flags = 0L;
+
+    if (complete) {
+      flags = (flags | (1<<3));
+    } else {
+      flags = (flags & ~(1<<3));
+    }
+    return this;
   }
 
   public boolean isRedirect() {
@@ -118,6 +137,83 @@ public final class SimpleB3ContextCarrier {
     return this;
   }
 
+  public String getTraceIdHigh() {
+    return this.traceIdHigh;
+  }
+
+  private SimpleB3ContextCarrier setTraceIdHigh(String traceIdHigh) {
+    this.traceIdHigh = traceIdHigh;
+    return this;
+  }
+
+  public String getTraceId() {
+    return this.traceId;
+  }
+
+  private SimpleB3ContextCarrier setTraceId(String traceId) {
+    this.traceId = traceId;
+    return this;
+  }
+
+  public String getParentId() {
+    return this.parentId;
+  }
+
+  private SimpleB3ContextCarrier setParentId(String parentId) {
+    this.parentId = parentId;
+    return this;
+  }
+
+  public String getSpanId() {
+    return this.spanId;
+  }
+
+  private SimpleB3ContextCarrier setSpanId(String spanId) {
+    this.spanId = spanId;
+    return this;
+  }
+
+  public Long getFlags() {
+    return this.flags;
+  }
+
+  private SimpleB3ContextCarrier setFlags(Long flags) {
+    this.flags = flags;
+    return this;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) return true;
+    if (!(o instanceof SimpleB3ContextCarrier)) return false;
+    SimpleB3ContextCarrier that = (SimpleB3ContextCarrier) o;
+    return (this.traceIdHigh != null && this.traceIdHigh.equals(that.traceIdHigh)
+        || (this.traceIdHigh == null && that.traceIdHigh == null))
+      && this.traceId.equals(that.traceId)
+      && this.spanId.equals(that.spanId)
+      && (this.parentId != null && this.parentId.equals(that.parentId)
+        || (this.parentId == null && that.parentId == null))
+      && (this.flags != null && this.flags.equals(that.flags)
+        || (this.flags == null && that.flags == null));
+  }
+
+  @Override
+  public int hashCode() {
+    int h = 1;
+    h *= 1000003;
+    h ^= traceIdHigh.hashCode();
+    h *= 1000003;
+    h ^= traceId.hashCode();
+    h *= 1000003;
+    h ^= (parentId == null) ? 0 : parentId.hashCode();
+    h *= 1000003;
+    h ^= spanId.hashCode();
+    h *= 1000003;
+    h ^= (flags == null) ? 0 : (flags >>> 32) ^ flags;
+    return h;
+  }
+
+
 
   public static final class Builder {
 
@@ -127,8 +223,29 @@ public final class SimpleB3ContextCarrier {
       carrier = new SimpleB3ContextCarrier();
     }
 
+    @Deprecated
     public static Builder newBuilder() {
       return new Builder();
+    }
+
+    public Builder setTraceIdHigh(String traceId) {
+      this.carrier.setTraceIdHigh(traceId);
+      return this;
+    }
+
+    public Builder setTraceId(String traceId) {
+      this.carrier.setTraceId(traceId);
+      return this;
+    }
+
+    public Builder setParentId(String parentId) {
+      this.carrier.setParentId(parentId);
+      return this;
+    }
+
+    public Builder setSpanId(String spanId) {
+      this.carrier.setSpanId(spanId);
+      return this;
     }
 
     public Builder setRedirect(boolean redirect) {
@@ -143,6 +260,11 @@ public final class SimpleB3ContextCarrier {
 
     public Builder setDebug(boolean debug) {
       this.carrier.setDebug(debug);
+      return this;
+    }
+
+    public Builder setComplete(boolean complete) {
+      this.carrier.setComplete(complete);
       return this;
     }
 
