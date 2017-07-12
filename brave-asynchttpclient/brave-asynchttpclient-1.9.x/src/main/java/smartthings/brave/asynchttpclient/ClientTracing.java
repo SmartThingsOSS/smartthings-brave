@@ -32,6 +32,7 @@ import com.ning.http.client.filter.FilterException;
 import com.ning.http.client.filter.IOExceptionFilter;
 import com.ning.http.client.filter.RequestFilter;
 import com.ning.http.client.filter.ResponseFilter;
+import java.util.concurrent.CancellationException;
 import zipkin.Endpoint;
 
 public class ClientTracing {
@@ -171,7 +172,12 @@ public class ClientTracing {
     }
 
     @Override public void onThrowable(Throwable t) {
-      this.handler.handleReceive(null, t, span);
+      // Ignore cancellation exception since its commonly raised by AHC where its not important.
+      // An example case is where RxJava routinely calls f.cancel() on the future and AHC will
+      // produce this exception even though there wasn't a failure.
+      if (!(t instanceof CancellationException)) {
+        this.handler.handleReceive(null, t, span);
+      }
       if (delegate != null) {
         this.delegate.onThrowable(t);
       }
