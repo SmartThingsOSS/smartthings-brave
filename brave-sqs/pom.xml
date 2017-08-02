@@ -23,12 +23,11 @@
     <version>0.2.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>smartthings-brave-kafka</artifactId>
+  <artifactId>smartthings-brave-sqs</artifactId>
   <packaging>jar</packaging>
 
-  <name>smartthings-brave-kafka</name>
-  <description>Brave kafka client topics tracing</description>
-  <url>https://github.com/kristofa/brave</url>
+  <name>smartthings-brave-sqs</name>
+  <description>Brave SQS client tracing</description>
   <licenses>
     <license>
       <name>Apache 2</name>
@@ -43,58 +42,30 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>19.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.21</version>
-    </dependency>
-    <dependency>
       <groupId>io.zipkin.brave</groupId>
       <artifactId>brave</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-clients</artifactId>
-      <version>0.10.2.0</version>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-sqs</artifactId>
+      <version>1.11.164</version>
     </dependency>
     <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>3.0.0</version>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.auto.value</groupId>
       <artifactId>auto-value</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.elasticmq</groupId>
+      <artifactId>elasticmq-server_2.11</artifactId>
+      <version>0.13.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>com.github.os72</groupId>
-        <artifactId>protoc-jar-maven-plugin</artifactId>
-        <version>3.2.0</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <protocVersion>3.2.0</protocVersion>
-              <includeStdTypes>true</includeStdTypes>
-              <inputDirectories>
-                <include>src/main/proto</include>
-              </inputDirectories>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>
