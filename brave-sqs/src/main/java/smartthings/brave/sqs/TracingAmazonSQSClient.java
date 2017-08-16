@@ -95,15 +95,8 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
       ? remoteServiceName
       : "amazon-sqs";
 
-    this.injector = tracing.tracing().propagation().injector((carrier, key, v) ->
-      carrier.put(key, new MessageAttributeValue().withDataType("String").withStringValue(v)));
-    this.extractor = tracing.tracing().propagation().extractor((carrier, key) -> {
-      if (carrier.containsKey(key)) {
-        return carrier.get(key).getStringValue();
-      } else {
-        return null;
-      }
-    });
+    this.injector = tracing.tracing().propagation().injector(AmazonSQSB3Propagation.INJECTOR);
+    this.extractor = tracing.tracing().propagation().extractor(AmazonSQSB3Propagation.EXTRACTOR);
   }
 
   @Override public void setEndpoint(String endpoint) {
@@ -154,7 +147,7 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
   }
 
   @Override public DeleteMessageResult deleteMessage(DeleteMessageRequest deleteMessageRequest) {
-    Span span = withEndpoint(tracer.nextSpan());
+    Span span = tracer.nextSpan().kind(Span.Kind.CLIENT).start();
 
     try(Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
       parser.request(deleteMessageRequest, span);
@@ -175,7 +168,7 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
   @Override public DeleteMessageBatchResult deleteMessageBatch(
     DeleteMessageBatchRequest deleteMessageBatchRequest) {
-    Span span = withEndpoint(tracer.nextSpan());
+    Span span = tracer.nextSpan().kind(Span.Kind.CLIENT).start();
 
     try(Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
       parser.request(deleteMessageBatchRequest, span);
@@ -244,38 +237,26 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
   @Override
   public ReceiveMessageResult receiveMessage(ReceiveMessageRequest receiveMessageRequest) {
-    Span span = withEndpoint(tracer.nextSpan());
+    receiveMessageRequest = receiveMessageRequest.withMessageAttributeNames(
+      "X-B3-TraceId", "X-B3-SpanId", "X-B3-ParentSpanId", "X-B3-Sampled", "X-B3-Flags");
 
-    try(Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+    ReceiveMessageResult result = delegate.receiveMessage(receiveMessageRequest);
 
-      parser.request(receiveMessageRequest, span);
+    // complete in flight one-way spans for all received messages
+    for(Message message : result.getMessages()) {
+      TraceContextOrSamplingFlags traceContextOrSamplingFlags = extractor.extract(message.getMessageAttributes());
+      TraceContext ctx = traceContextOrSamplingFlags.context();
+      Span oneWay = withEndpoint((ctx != null)
+        ? tracer.joinSpan(ctx)
+        : tracer.newTrace(traceContextOrSamplingFlags.samplingFlags()));
 
-      ReceiveMessageResult result = delegate.receiveMessage(receiveMessageRequest);
-
-      parser.response(result, span);
-
-      // complete in flight one-way spans for all received messages
-      for(Message message : result.getMessages()) {
-        TraceContextOrSamplingFlags traceContextOrSamplingFlags = extractor.extract(message.getMessageAttributes());
-        TraceContext ctx = traceContextOrSamplingFlags.context();
-        Span oneWay = withEndpoint((ctx != null)
-          ? tracer.joinSpan(ctx)
-          : tracer.newTrace(traceContextOrSamplingFlags.samplingFlags()));
-
-        oneWay.kind(Span.Kind.SERVER);
-        parser.response(result, oneWay);
-        oneWay.start().flush();
-
-      }
-
-      return result;
-
-    } catch (Exception e) {
-      parser.error(e, span);
-      throw e;
-    } finally {
-      span.finish();
+      oneWay.kind(Span.Kind.SERVER);
+      parser.response(result, oneWay);
+      oneWay.annotate("receive-"+parser.spanName(receiveMessageRequest.getQueueUrl()));
+      oneWay.start().flush();
     }
+
+    return result;
   }
 
   @Override public ReceiveMessageResult receiveMessage(String queueUrl) {
@@ -292,31 +273,19 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
   }
 
   @Override public SendMessageResult sendMessage(SendMessageRequest sendMessageRequest) {
-    Span span = withEndpoint(tracer.nextSpan());
 
-    try(Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+    Span oneWay = withEndpoint(tracer.nextSpan())
+      .kind(Span.Kind.CLIENT)
+      .start();
 
-      parser.request(sendMessageRequest, span);
+    injector.inject(oneWay.context(), sendMessageRequest.getMessageAttributes());
+    parser.request(sendMessageRequest, oneWay);
+    SendMessageResult result = delegate.sendMessage(sendMessageRequest);
 
-      Span oneWay = withEndpoint(tracer.nextSpan())
-        .kind(Span.Kind.CLIENT)
-        .start();
+    // flush after remote call so we don't start one way spans on a request failure
+    oneWay.flush();
 
-      injector.inject(oneWay.context(), sendMessageRequest.getMessageAttributes());
-      parser.request(sendMessageRequest, oneWay);
-      SendMessageResult result = delegate.sendMessage(sendMessageRequest);
-      parser.response(result, span);
-
-      // flush after remote call so we don't start one way spans on a request failure
-      oneWay.flush();
-
-      return result;
-    } catch (Exception e) {
-      parser.error(e, span);
-      throw e;
-    } finally {
-      span.finish();
-    }
+    return result;
   }
 
   @Override public SendMessageResult sendMessage(String queueUrl, String messageBody) {
@@ -325,41 +294,26 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
   @Override
   public SendMessageBatchResult sendMessageBatch(SendMessageBatchRequest sendMessageBatchRequest) {
-    Span span = withEndpoint(tracer.nextSpan());
 
-    try(Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+    List<Span> oneWays = new LinkedList<>();
+    for (SendMessageBatchRequestEntry entry : sendMessageBatchRequest.getEntries()) {
+      Span s = withEndpoint(tracer.nextSpan())
+        .kind(Span.Kind.CLIENT)
+        .start();
 
-      parser.request(sendMessageBatchRequest, span);
-
-      List<Span> oneWays = new LinkedList<>();
-      for (SendMessageBatchRequestEntry entry : sendMessageBatchRequest.getEntries()) {
-        Span s = withEndpoint(tracer.nextSpan())
-          .kind(Span.Kind.CLIENT)
-          .start();
-
-        parser.request(sendMessageBatchRequest, s);
-        injector.inject(s.context(), entry.getMessageAttributes());
-        oneWays.add(s);
-      }
-
-      SendMessageBatchResult result = delegate.sendMessageBatch(sendMessageBatchRequest);
-
-      parser.response(result, span);
-
-      // flush after success so we don't start one way spans on a request failure.
-      for(Span oneWay : oneWays) {
-        oneWay.flush();
-      }
-
-      return result;
-
-    } catch (Exception e) {
-      parser.error(e, span);
-      throw e;
-    } finally {
-      span.finish();
+      parser.request(sendMessageBatchRequest, s);
+      injector.inject(s.context(), entry.getMessageAttributes());
+      oneWays.add(s);
     }
 
+    SendMessageBatchResult result = delegate.sendMessageBatch(sendMessageBatchRequest);
+
+    // flush after success so we don't start one way spans on a request failure.
+    for(Span oneWay : oneWays) {
+      oneWay.flush();
+    }
+
+    return result;
   }
 
   @Override public SendMessageBatchResult sendMessageBatch(String queueUrl,
