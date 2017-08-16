@@ -113,9 +113,9 @@ public class TracingAmazonSQSClientTest {
     tracingClient.receiveMessage(sqsRule.queueUrl());
 
     assertThat(spans)
-      .filteredOn(s -> s.name.contains("send") || s.name.contains("receive"))
+      .filteredOn(s -> s.name.contains("send"))
       .extracting(s -> s.name)
-      .contains("send_message-test", "receive_message-test");
+      .contains("send_message-test");
   }
 
   private Tracing.Builder tracingBuilder(Sampler sampler) {

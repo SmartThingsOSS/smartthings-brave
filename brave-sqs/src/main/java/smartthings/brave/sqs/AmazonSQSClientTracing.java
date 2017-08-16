@@ -58,7 +58,7 @@ public abstract class AmazonSQSClientTracing {
 
     public abstract AmazonSQSClientTracing build();
 
-    abstract Builder remoteServiceName(@Nullable String remoteServiceName);
+    public abstract Builder remoteServiceName(@Nullable String remoteServiceName);
 
     Builder() {}
   }

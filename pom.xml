@@ -69,8 +69,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <main.basedir>${project.basedir}</main.basedir>
-    <zipkin.version>1.26.1</zipkin.version>
-    <brave.version>4.3.4</brave.version>
+    <zipkin.version>1.30.3</zipkin.version>
+    <brave.version>4.5.2</brave.version>
     <brave-cassandra.version>0.1.1</brave-cassandra.version>
     <cassandra-driver.version>3.2.0</cassandra-driver.version>
     <log4j.version>2.3</log4j.version>
@@ -248,7 +248,7 @@
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
-      <version>3.6.2</version>
+      <version>3.8.0</version>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>
