@@ -77,7 +77,7 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
   }
 
   private final AmazonSQS delegate;
-  private final Tracer tracer;
+  private final Tracing tracing;
   private final AmazonSQSClientParser parser;
   private final AmazonSQSClientSampler sampler;
   private final String remoteServiceName;
@@ -87,7 +87,7 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
   private TracingAmazonSQSClient(AmazonSQSClientTracing tracing, AmazonSQS delegate) {
     super();
     this.delegate = delegate;
-    this.tracer = tracing.tracing().tracer();
+    this.tracing = tracing.tracing();
     this.parser = tracing.parser();
     this.sampler = tracing.sampler();
     String remoteServiceName = tracing.remoteServiceName();
@@ -147,9 +147,9 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
   }
 
   @Override public DeleteMessageResult deleteMessage(DeleteMessageRequest deleteMessageRequest) {
-    Span span = tracer.nextSpan().kind(Span.Kind.CLIENT).start();
+    Span span = tracing.tracer().nextSpan().kind(Span.Kind.CLIENT).start();
 
-    try(Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+    try(Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
       parser.request(deleteMessageRequest, span);
       DeleteMessageResult result = delegate.deleteMessage(deleteMessageRequest);
       parser.response(result, span);
@@ -168,9 +168,9 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
   @Override public DeleteMessageBatchResult deleteMessageBatch(
     DeleteMessageBatchRequest deleteMessageBatchRequest) {
-    Span span = tracer.nextSpan().kind(Span.Kind.CLIENT).start();
+    Span span = tracing.tracer().nextSpan().kind(Span.Kind.CLIENT).start();
 
-    try(Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
+    try(Tracer.SpanInScope ws = tracing.tracer().withSpanInScope(span)) {
       parser.request(deleteMessageBatchRequest, span);
       DeleteMessageBatchResult result = delegate.deleteMessageBatch(deleteMessageBatchRequest);
       parser.response(result, span);
@@ -237,8 +237,8 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
   @Override
   public ReceiveMessageResult receiveMessage(ReceiveMessageRequest receiveMessageRequest) {
-    receiveMessageRequest = receiveMessageRequest.withMessageAttributeNames(
-      "X-B3-TraceId", "X-B3-SpanId", "X-B3-ParentSpanId", "X-B3-Sampled", "X-B3-Flags");
+    receiveMessageRequest = receiveMessageRequest
+      .withMessageAttributeNames(tracing.propagation().keys());
 
     ReceiveMessageResult result = delegate.receiveMessage(receiveMessageRequest);
 
@@ -247,8 +247,8 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
       TraceContextOrSamplingFlags traceContextOrSamplingFlags = extractor.extract(message.getMessageAttributes());
       TraceContext ctx = traceContextOrSamplingFlags.context();
       Span oneWay = withEndpoint((ctx != null)
-        ? tracer.joinSpan(ctx)
-        : tracer.newTrace(traceContextOrSamplingFlags.samplingFlags()));
+        ? tracing.tracer().joinSpan(ctx)
+        : tracing.tracer().newTrace(traceContextOrSamplingFlags.samplingFlags()));
 
       oneWay.kind(Span.Kind.SERVER);
       parser.response(result, oneWay);
@@ -274,7 +274,7 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
   @Override public SendMessageResult sendMessage(SendMessageRequest sendMessageRequest) {
 
-    Span oneWay = withEndpoint(tracer.nextSpan())
+    Span oneWay = withEndpoint(tracing.tracer().nextSpan())
       .kind(Span.Kind.CLIENT)
       .start();
 
@@ -297,7 +297,7 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
     List<Span> oneWays = new LinkedList<>();
     for (SendMessageBatchRequestEntry entry : sendMessageBatchRequest.getEntries()) {
-      Span s = withEndpoint(tracer.nextSpan())
+      Span s = withEndpoint(tracing.tracer().nextSpan())
         .kind(Span.Kind.CLIENT)
         .start();
 
