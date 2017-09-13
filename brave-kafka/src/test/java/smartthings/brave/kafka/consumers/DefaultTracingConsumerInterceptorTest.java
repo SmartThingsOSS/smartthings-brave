@@ -14,7 +14,6 @@
  */
 package smartthings.brave.kafka.consumers;
 
-import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
@@ -30,13 +29,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import smartthings.brave.kafka.EnvelopeProtos;
-import zipkin.Constants;
-import zipkin.Endpoint;
-import zipkin.Span;
 import zipkin.reporter.Reporter;
+import zipkin2.Endpoint;
+import zipkin2.Span;
 
 import java.util.UUID;
 
+import static brave.internal.HexCodec.toLowerHex;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -49,10 +48,10 @@ public class DefaultTracingConsumerInterceptorTest {
     .localServiceName("test")
     .sampler(Sampler.ALWAYS_SAMPLE)
     .traceId128Bit(true)
-    .reporter(reporter)
+    .spanReporter(reporter)
     .build();
   private final SpanNameProvider<String> nameProvider = mock(SpanNameProvider.class);
-  private final Endpoint endpoint = Endpoint.builder().serviceName("test-service").build();
+  private final Endpoint endpoint = Endpoint.newBuilder().serviceName("test-service").build();
   private final ArgumentCaptor<Span> spanCaptor = ArgumentCaptor.forClass(Span.class);
 
   private DefaultTracingConsumerInterceptor<String> interceptor;
@@ -121,10 +120,9 @@ public class DefaultTracingConsumerInterceptorTest {
 
     verify(reporter).report(spanCaptor.capture());
     Span capturedSpan = spanCaptor.getValue();
-    assertEquals(spanId, capturedSpan.id);
-    assertEquals(parentId, capturedSpan.parentId);
-    assertEquals(traceId, capturedSpan.traceId);
-    assertEquals(traceIdHigh, capturedSpan.traceIdHigh);
-    assertEquals(Constants.SERVER_RECV, capturedSpan.annotations.get(0).value);
+    assertEquals(toLowerHex(spanId), capturedSpan.id());
+    assertEquals(toLowerHex(parentId), capturedSpan.parentId());
+    assertEquals(toLowerHex(traceIdHigh, traceId), capturedSpan.traceId());
+    assertEquals(Span.Kind.SERVER, capturedSpan.kind());
   }
 }

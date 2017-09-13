@@ -19,13 +19,12 @@ import brave.sampler.Sampler;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.UUID;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Before;
 import org.junit.Test;
 import smartthings.brave.kafka.EnvelopeProtos;
-import zipkin.Endpoint;
 import zipkin.reporter.Reporter;
+import zipkin2.Endpoint;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -37,15 +36,15 @@ import static org.mockito.Mockito.when;
 
 public class DefaultTracingProducerInterceptorTest {
 
-  private final Reporter<zipkin.Span> reporter = mock(Reporter.class);
+  private final Reporter<zipkin2.Span> reporter = mock(Reporter.class);
   private final Tracing tracing = Tracing.newBuilder()
     .localServiceName("test")
     .sampler(Sampler.ALWAYS_SAMPLE)
     .traceId128Bit(true)
-    .reporter(reporter)
+    .spanReporter(reporter)
     .build();
   private final SpanNameProvider<String> nameProvider = mock(SpanNameProvider.class);
-  private final Endpoint endpoint = Endpoint.builder().serviceName("test-service").build();
+  private final Endpoint endpoint = Endpoint.newBuilder().serviceName("test-service").build();
 
   private DefaultTracingProducerInterceptor<String> interceptor;
 

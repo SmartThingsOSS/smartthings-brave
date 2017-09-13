@@ -64,7 +64,7 @@ import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import zipkin.Endpoint;
+import zipkin2.Endpoint;
 
 public class TracingAmazonSQSClient  implements AmazonSQS {
 
@@ -341,8 +341,7 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
 
   private Span withEndpoint(Span span) {
     if (!span.isNoop()) {
-      Endpoint.Builder remoteEndpoint = Endpoint.builder().serviceName(remoteServiceName);
-      span.remoteEndpoint(remoteEndpoint.build());
+      span.remoteEndpoint(Endpoint.newBuilder().serviceName(remoteServiceName).build());
     }
 
     return span;

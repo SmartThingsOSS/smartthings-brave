@@ -15,8 +15,8 @@ package smartthings.brave.sqs;
 
 import brave.Tracer;
 import brave.Tracing;
-import brave.internal.StrictCurrentTraceContext;
 import brave.propagation.CurrentTraceContext;
+import brave.propagation.StrictCurrentTraceContext;
 import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -24,13 +24,13 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import zipkin.Span;
+import zipkin2.Span;
 
+import static brave.internal.HexCodec.toLowerHex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
@@ -91,8 +91,8 @@ public class TracingAmazonSQSClientTest {
     tracingClient.receiveMessage(sqsRule.queueUrl());
 
     assertThat(spans)
-      .extracting(s -> tuple(s.traceId, s.parentId))
-      .contains(tuple(parent.context().traceId(), parent.context().spanId()));
+      .extracting(s -> tuple(s.traceId(), s.parentId()))
+      .contains(tuple(parent.context().traceIdString(), toLowerHex(parent.context().spanId())));
   }
 
   @Test
@@ -102,9 +102,16 @@ public class TracingAmazonSQSClientTest {
     tracingClient.receiveMessage(sqsRule.queueUrl());
 
     assertThat(spans)
-      .flatExtracting(s -> s.annotations.stream().filter(a -> a.value.equals("cs") || a.value.equals("sr"))
-        .map(a -> a.value).collect(Collectors.toList()))
-      .contains("cs", "sr");
+      .extracting(Span::kind)
+      .containsExactly(Span.Kind.CLIENT, Span.Kind.SERVER);
+
+    assertThat(spans)
+      .extracting(Span::shared)
+      .containsOnly(false, true); // server side is sharing the span ID
+
+    assertThat(spans)
+      .extracting(Span::duration)
+      .containsOnly(null, null); // neither side finished the span
   }
 
   @Test
@@ -113,19 +120,18 @@ public class TracingAmazonSQSClientTest {
     tracingClient.receiveMessage(sqsRule.queueUrl());
 
     assertThat(spans)
-      .filteredOn(s -> s.name.contains("send"))
-      .extracting(s -> s.name)
+      .extracting(Span::name)
       .contains("send_message-test");
   }
 
   private Tracing.Builder tracingBuilder(Sampler sampler) {
     return Tracing.newBuilder()
-      .reporter(s -> {
+      .spanReporter(s -> {
         // make sure the context was cleared prior to finish.. no leaks!
         TraceContext current = clientTracing.tracing().currentTraceContext().get();
         if (current != null) {
           assertThat(current.spanId())
-            .isNotEqualTo(s.id);
+            .isNotEqualTo(s.id());
         }
         spans.add(s);
       })
