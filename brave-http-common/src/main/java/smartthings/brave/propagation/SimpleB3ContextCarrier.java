@@ -366,17 +366,20 @@ public final class SimpleB3ContextCarrier {
   public static final class Setter implements Propagation.Setter<SimpleB3ContextCarrier, String> {
 
     @Override public void put(SimpleB3ContextCarrier carrier, String key, String value) {
+      if ("".equals(value)) value = null;
       if (TRACE_ID_NAME.equals(key)) {
-        carrier.traceIdHigh = (value.length() == 32) ? value.substring(0, 15) : null;
+        carrier.traceIdHigh = (value.length() == 32) ? value.substring(0, 16) : null;
         carrier.traceId = (value.length() == 32) ? value.substring(16) : value;
       } else if (SPAN_ID_NAME.equals(key)) {
         carrier.spanId = value;
-      } else if (PARENT_SPAN_ID_NAME.equals(key) && value != null && !value.equals("")) {
+      } else if (PARENT_SPAN_ID_NAME.equals(key)) {
         carrier.parentId = value;
-      } else if (SAMPLED_NAME.equals(key) && value != null && !value.equals("")) {
-        carrier.setSampled(value.equals("1") || value.equals("true"));
-      } else if (FLAGS_NAME.equals(key) && value != null && !value.equals("")) {
-        if (carrier.flags != null) {
+      } else if (SAMPLED_NAME.equals(key)) {
+        carrier.setSampled("1".equals(value) || "true".equals(value));
+      } else if (FLAGS_NAME.equals(key)) {
+        if (value == null) {
+          carrier.flags = null;
+        } else if (carrier.flags != null) {
           carrier.flags = carrier.flags | HexCodec.lowerHexToUnsignedLong(value);
         } else {
           carrier.flags = HexCodec.lowerHexToUnsignedLong(value);
