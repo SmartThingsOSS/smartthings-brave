@@ -22,8 +22,7 @@ import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.config.ConfigException;
-import zipkin.Constants;
-import zipkin.Endpoint;
+import zipkin2.Endpoint;
 
 import java.util.Map;
 
@@ -86,7 +85,7 @@ public abstract class BaseTracingProducerInterceptor<K> implements ProducerInter
       && configs.get("brave.span.remote.endpoint") instanceof Endpoint) {
       kafkaEndpoint = (Endpoint) configs.get("brave.span.remote.endpoint");
     } else {
-      kafkaEndpoint = Endpoint.builder().serviceName("Kafka").build();
+      kafkaEndpoint = Endpoint.newBuilder().serviceName("Kafka").build();
     }
   }
 }

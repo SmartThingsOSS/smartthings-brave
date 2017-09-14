@@ -26,7 +26,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
-import zipkin.Endpoint;
+import zipkin2.Endpoint;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -127,7 +127,7 @@ public abstract class BaseTracingConsumerInterceptor<K> implements ConsumerInter
       && configs.get("brave.span.remote.endpoint") instanceof Endpoint) {
       kafkaEndpoint = (Endpoint) configs.get("brave.span.remote.endpoint");
     } else {
-      kafkaEndpoint = Endpoint.builder().serviceName("Kafka").build();
+      kafkaEndpoint = Endpoint.newBuilder().serviceName("Kafka").build();
     }
   }
 

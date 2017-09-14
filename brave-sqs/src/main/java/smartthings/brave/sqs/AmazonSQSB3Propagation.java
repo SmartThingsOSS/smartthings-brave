@@ -19,7 +19,8 @@ import java.util.Map;
 
 public final class AmazonSQSB3Propagation {
 
-  private AmazonSQSB3Propagation() {}
+  private AmazonSQSB3Propagation() {
+  }
 
   public static final Propagation.Getter<Map<String, MessageAttributeValue>, String> EXTRACTOR =
     (carrier, key) -> {
@@ -31,7 +32,12 @@ public final class AmazonSQSB3Propagation {
     };
 
   public static final Propagation.Setter<Map<String, MessageAttributeValue>, String> INJECTOR =
-    (carrier, key, v) -> carrier.put(key,
-      new MessageAttributeValue().withDataType("String").withStringValue(v));
-
+    (carrier, key, v) -> {
+      if (v == null) {
+        carrier.remove(key);
+      } else {
+        carrier.put(key,
+          new MessageAttributeValue().withDataType("String").withStringValue(v));
+      }
+    };
 }

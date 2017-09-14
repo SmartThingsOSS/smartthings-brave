@@ -29,7 +29,6 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import java.net.MalformedURLException;
 import java.net.URL;
-import zipkin.Constants;
 
 public class AmazonSQSClientParser {
 
@@ -86,7 +85,7 @@ public class AmazonSQSClientParser {
 
   public void error(Throwable throwable, SpanCustomizer customizer) {
     String message = throwable.getMessage();
-    customizer.tag(Constants.ERROR, message);
+    customizer.tag("error", message);
   }
 
   protected String spanName(SendMessageBatchRequest request) {

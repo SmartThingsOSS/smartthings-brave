@@ -33,7 +33,7 @@ import com.ning.http.client.filter.IOExceptionFilter;
 import com.ning.http.client.filter.RequestFilter;
 import com.ning.http.client.filter.ResponseFilter;
 import java.util.concurrent.CancellationException;
-import zipkin.Endpoint;
+import zipkin2.Endpoint;
 
 public class ClientTracing {
 

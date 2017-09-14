@@ -32,7 +32,7 @@ import org.asynchttpclient.filter.FilterException;
 import org.asynchttpclient.filter.IOExceptionFilter;
 import org.asynchttpclient.filter.RequestFilter;
 import org.asynchttpclient.filter.ResponseFilter;
-import zipkin.Endpoint;
+import zipkin2.Endpoint;
 
 public class ClientTracing {
 

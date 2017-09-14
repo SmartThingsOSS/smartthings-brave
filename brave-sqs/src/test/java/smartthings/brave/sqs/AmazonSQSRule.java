@@ -28,8 +28,9 @@ import org.elasticmq.rest.sqs.SQSLimits;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.rules.ExternalResource;
-import zipkin.Codec;
-import zipkin.Span;
+import zipkin2.Span;
+import zipkin2.codec.SpanBytesDecoder;
+import zipkin2.codec.SpanBytesEncoder;
 
 import static java.util.Collections.singletonList;
 
@@ -130,14 +131,13 @@ public class AmazonSQSRule extends ExternalResource {
   }
 
   private void sendSpansInternal(List<Span> spans) {
-    String body = Base64.encodeAsString(Codec.THRIFT.writeSpans(spans));
+    String body = Base64.encodeAsString(SpanBytesEncoder.JSON_V2.encodeList(spans));
     client.sendMessage(new SendMessageRequest(queueUrl, body));
   }
 
   private static List<Span> fromBase64(String base64) {
     byte[] bytes = Base64.decode(base64);
-    return Codec.THRIFT.readSpans(bytes);
+    return SpanBytesDecoder.JSON_V2.decodeList(bytes);
   }
-
 }
 

@@ -69,9 +69,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <main.basedir>${project.basedir}</main.basedir>
-    <zipkin.version>1.30.3</zipkin.version>
-    <brave.version>4.5.2</brave.version>
-    <brave-cassandra.version>0.1.1</brave-cassandra.version>
+    <zipkin.version>2.0.0</zipkin.version>
+    <brave.version>4.7.1</brave.version>
+    <brave-cassandra.version>0.2.0</brave-cassandra.version>
     <cassandra-driver.version>3.2.0</cassandra-driver.version>
     <log4j.version>2.3</log4j.version>
     <httpcomponents.version>4.4.1</httpcomponents.version>
@@ -151,7 +151,12 @@
         <version>${brave.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.zipkin.java</groupId>
+        <groupId>io.zipkin.brave</groupId>
+        <artifactId>brave-tests</artifactId>
+        <version>${brave.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.zipkin.zipkin2</groupId>
         <artifactId>zipkin</artifactId>
         <version>${zipkin.version}</version>
       </dependency>
@@ -196,7 +201,7 @@
       <dependency>
         <groupId>com.google.auto.value</groupId>
         <artifactId>auto-value</artifactId>
-        <version>1.4.1</version>
+        <version>1.5</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>

@@ -24,7 +24,6 @@ import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.junit.After;
 import org.junit.Test;
-import zipkin.Constants;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -79,9 +78,8 @@ public class ITClientTracing extends ITHttpClient<AsyncHttpClient> {
     }
 
     assertThat(spans)
-      .flatExtracting(s -> s.binaryAnnotations)
-      .extracting(b -> b.key)
-      .contains(Constants.ERROR);
+      .flatExtracting(s -> s.tags().keySet())
+      .contains("error");
   }
 
 }
