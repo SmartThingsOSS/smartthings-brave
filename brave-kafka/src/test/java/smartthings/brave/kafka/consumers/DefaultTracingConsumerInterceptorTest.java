@@ -29,9 +29,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import smartthings.brave.kafka.EnvelopeProtos;
-import zipkin.reporter.Reporter;
 import zipkin2.Endpoint;
 import zipkin2.Span;
+import zipkin2.reporter.Reporter;
 
 import java.util.UUID;
 

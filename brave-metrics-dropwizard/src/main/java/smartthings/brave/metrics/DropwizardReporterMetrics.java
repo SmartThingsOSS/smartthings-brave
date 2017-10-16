@@ -17,7 +17,7 @@ package smartthings.brave.metrics;
 import com.codahale.metrics.MetricRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import zipkin.reporter.ReporterMetrics;
+import zipkin2.reporter.ReporterMetrics;
 
 public final class DropwizardReporterMetrics implements ReporterMetrics {
 

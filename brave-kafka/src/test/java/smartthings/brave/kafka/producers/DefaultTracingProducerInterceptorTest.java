@@ -23,8 +23,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Before;
 import org.junit.Test;
 import smartthings.brave.kafka.EnvelopeProtos;
-import zipkin.reporter.Reporter;
 import zipkin2.Endpoint;
+import zipkin2.reporter.Reporter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
