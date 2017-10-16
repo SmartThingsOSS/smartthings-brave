@@ -59,7 +59,7 @@ public class ClientTracing {
     }
   }
 
-  private static final class TracingRequestFilter extends TracingFilter implements RequestFilter {
+  public static final class TracingRequestFilter extends TracingFilter implements RequestFilter {
 
     TracingRequestFilter(HttpTracing httpTracing) {
       super(httpTracing);
@@ -85,7 +85,7 @@ public class ClientTracing {
     }
   }
 
-  private static final class TracingResponseFilter extends TracingFilter implements ResponseFilter {
+  public static final class TracingResponseFilter extends TracingFilter implements ResponseFilter {
 
 
     TracingResponseFilter(HttpTracing httpTracing) {
@@ -125,7 +125,7 @@ public class ClientTracing {
     }
   }
 
-  private static final class TracingIOExceptionFilter extends TracingFilter implements
+  public static final class TracingIOExceptionFilter extends TracingFilter implements
     IOExceptionFilter {
 
     private final HttpTracing httpTracing;
