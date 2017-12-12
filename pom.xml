@@ -98,6 +98,7 @@
     <module>brave-http-common</module>
     <module>brave-cassandra-common</module>
     <module>brave-sqs</module>
+    <module>brave-sns</module>
   </modules>
 
   <distributionManagement>
