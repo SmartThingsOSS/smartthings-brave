@@ -57,6 +57,11 @@
       <artifactId>brave</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.zipkin.java</groupId>
+      <artifactId>zipkin</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
       <version>0.10.2.0</version>

@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 SmartThings
+ * Copyright 2016-2018 SmartThings
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -107,7 +107,7 @@ public class TracingAmazonSQSClientTest {
 
     assertThat(spans)
       .extracting(Span::shared)
-      .containsOnly(false, true); // server side is sharing the span ID
+      .containsOnly(null, true); // server side is sharing the span ID
 
     assertThat(spans)
       .extracting(Span::duration)

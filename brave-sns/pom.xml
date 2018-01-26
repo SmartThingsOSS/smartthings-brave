@@ -46,6 +46,11 @@
             <artifactId>brave</artifactId>
         </dependency>
         <dependency>
+          <groupId>io.zipkin.java</groupId>
+          <artifactId>zipkin</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sns</artifactId>
             <version>1.11.164</version>
