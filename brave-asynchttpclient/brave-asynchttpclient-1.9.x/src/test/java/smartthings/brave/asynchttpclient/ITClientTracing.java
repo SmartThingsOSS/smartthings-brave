@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 SmartThings
+ * Copyright 2016-2018 SmartThings
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -52,10 +52,5 @@ public class ITClientTracing extends ITHttpClient<AsyncHttpClient> {
       .setBody(body)
       .execute()
       .get(1000, TimeUnit.MILLISECONDS);
-  }
-
-  @Override protected void getAsync(AsyncHttpClient client, String pathIncludingQuery)
-    throws Exception {
-    client.prepareGet("http://127.0.0.1:" + port + pathIncludingQuery).execute();
   }
 }
