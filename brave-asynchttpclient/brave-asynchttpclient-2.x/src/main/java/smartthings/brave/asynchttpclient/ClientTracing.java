@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 SmartThings
+ * Copyright 2016-2018 SmartThings
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -61,7 +61,7 @@ public class ClientTracing {
 
   public static final class TracingRequestFilter extends TracingFilter implements RequestFilter {
 
-    TracingRequestFilter(HttpTracing httpTracing) {
+    public TracingRequestFilter(HttpTracing httpTracing) {
       super(httpTracing);
     }
 
@@ -88,7 +88,7 @@ public class ClientTracing {
   public static final class TracingResponseFilter extends TracingFilter implements ResponseFilter {
 
 
-    TracingResponseFilter(HttpTracing httpTracing) {
+    public TracingResponseFilter(HttpTracing httpTracing) {
       super(httpTracing);
     }
 
@@ -130,7 +130,7 @@ public class ClientTracing {
 
     private final HttpTracing httpTracing;
 
-    TracingIOExceptionFilter(HttpTracing httpTracing) {
+    public TracingIOExceptionFilter(HttpTracing httpTracing) {
       super(httpTracing);
       this.httpTracing = httpTracing;
     }
