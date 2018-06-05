@@ -31,7 +31,7 @@ public class ITClientTracing extends ITHttpClient<AsyncHttpClient> {
       .instrument(new DefaultAsyncHttpClientConfig.Builder(), httpTracing)
       .setFollowRedirect(true)
       .setMaxRequestRetry(1)
-      .setRequestTimeout(100)
+      .setRequestTimeout(1000)
       .build();
 
     return new DefaultAsyncHttpClient(config);

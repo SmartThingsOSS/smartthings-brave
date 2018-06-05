@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 SmartThings
+ * Copyright 2016-2018 SmartThings
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -23,7 +23,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.HttpResponseBodyPart;
-import org.asynchttpclient.HttpResponseHeaders;
 import org.asynchttpclient.HttpResponseStatus;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
@@ -107,7 +106,7 @@ public class ClientTracing {
         if (ctx.getResponseStatus().getStatusCode() == 301 || ctx.getResponseStatus().getStatusCode() == 302) {
 
           // need to send the redirect URL to the tracer handleSend
-          String redirectUrl = ctx.getResponseHeaders().getHeaders().get("Location");
+          String redirectUrl = ctx.getResponseHeaders().get("Location");
           Request dummyRequest = new RequestBuilder(ctx.getRequest()).setUrl(redirectUrl).build();
 
           try (CurrentTraceContext.Scope scope = currentTraceContext.newScope(parent)) {
@@ -233,7 +232,7 @@ public class ClientTracing {
       }
     }
 
-    @Override public State onHeadersReceived(HttpResponseHeaders headers)
+    @Override public State onHeadersReceived(HttpHeaders headers)
       throws Exception {
       if (delegate != null) {
         return this.delegate.onHeadersReceived(headers);
