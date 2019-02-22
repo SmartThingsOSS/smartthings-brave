@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 SmartThings
+ * Copyright 2016-2019 SmartThings
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -245,10 +245,12 @@ public class TracingAmazonSQSClient  implements AmazonSQS {
     // complete in flight one-way spans for all received messages
     for(Message message : result.getMessages()) {
       TraceContextOrSamplingFlags traceContextOrSamplingFlags = extractor.extract(message.getMessageAttributes());
-      TraceContext ctx = traceContextOrSamplingFlags.context();
-      Span oneWay = withEndpoint((ctx != null)
-        ? tracing.tracer().joinSpan(ctx)
-        : tracing.tracer().newTrace(traceContextOrSamplingFlags.samplingFlags()));
+      Span oneWay;
+      if (traceContextOrSamplingFlags.context() != null) {
+        oneWay = withEndpoint(tracing.tracer().joinSpan(traceContextOrSamplingFlags.context()));
+      } else {
+        oneWay = withEndpoint(tracing.tracer().nextSpan(traceContextOrSamplingFlags));
+      }
 
       oneWay.kind(Span.Kind.SERVER);
       parser.response(result, oneWay);
