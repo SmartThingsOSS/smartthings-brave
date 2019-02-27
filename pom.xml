@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2016-2018 SmartThings
+    Copyright 2016-2019 SmartThings
 
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
     in compliance with the License. You may obtain a copy of the License at
@@ -69,8 +69,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <main.basedir>${project.basedir}</main.basedir>
-    <zipkin.version>2.5.0</zipkin.version>
-    <brave.version>4.16.2</brave.version>
+    <zipkin.version>2.12.2</zipkin.version>
+    <brave.version>5.6.1</brave.version>
     <brave-cassandra.version>0.6.0</brave-cassandra.version>
     <cassandra-driver.version>3.2.0</cassandra-driver.version>
     <log4j.version>2.3</log4j.version>
@@ -138,23 +138,10 @@
     <dependencies>
       <dependency>
         <groupId>io.zipkin.brave</groupId>
-        <artifactId>brave</artifactId>
+        <artifactId>brave-bom</artifactId>
         <version>${brave.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.zipkin.brave</groupId>
-        <artifactId>brave-instrumentation-http</artifactId>
-        <version>${brave.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.zipkin.brave</groupId>
-        <artifactId>brave-instrumentation-http-tests</artifactId>
-        <version>${brave.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.zipkin.brave</groupId>
-        <artifactId>brave-tests</artifactId>
-        <version>${brave.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
       </dependency>
       <dependency>
         <groupId>io.zipkin.zipkin2</groupId>
@@ -162,12 +149,7 @@
         <version>${zipkin.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.zipkin.java</groupId>
-        <artifactId>zipkin</artifactId>
-        <version>${zipkin.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.zipkin.java</groupId>
+        <groupId>io.zipkin.zipkin2</groupId>
         <artifactId>zipkin-junit</artifactId>
         <version>${zipkin.version}</version>
       </dependency>
@@ -259,7 +241,7 @@
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
-      <version>3.8.0</version>
+      <version>3.11.1</version>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>

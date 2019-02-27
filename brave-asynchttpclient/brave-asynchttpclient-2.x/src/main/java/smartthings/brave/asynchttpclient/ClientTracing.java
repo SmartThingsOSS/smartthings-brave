@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018 SmartThings
+ * Copyright 2016-2019 SmartThings
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -141,7 +141,7 @@ public class ClientTracing {
         Span span = asyncTracingHandler.span;
 
         if (span != null) {
-          long timestamp = httpTracing.tracing().clock().currentTimeMicroseconds();
+          long timestamp = httpTracing.tracing().clock(span.context()).currentTimeMicroseconds();
           span.annotate(timestamp, ctx.getIOException().getMessage());
         }
       }
@@ -154,7 +154,7 @@ public class ClientTracing {
 
   private static final class HttpAdapter extends HttpClientAdapter<Request, HttpResponseStatus> {
 
-    @Override public boolean parseServerAddress(Request req, Endpoint.Builder builder) {
+    @Override public boolean parseServerIpAndPort(Request req, Endpoint.Builder builder) {
 
       if (req == null) return false;
       if (builder.parseIp(req.getAddress()) || builder.parseIp(req.getUri().getHost())) {
