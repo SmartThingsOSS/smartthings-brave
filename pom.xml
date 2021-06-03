@@ -74,7 +74,7 @@
     <brave-cassandra.version>0.6.0</brave-cassandra.version>
     <cassandra-driver.version>3.2.0</cassandra-driver.version>
     <log4j.version>2.3</log4j.version>
-    <httpcomponents.version>4.4.1</httpcomponents.version>
+    <httpcomponents.version>4.5.13</httpcomponents.version>
     <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
     <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
     <nexus-staging-maven-plugin.version>1.6.6</nexus-staging-maven-plugin.version>
